@@ -1,0 +1,2 @@
+class DataListItemException(Exception):
+    pass
