@@ -4,10 +4,21 @@ from modules.util.objects.data_list import DataList
 
 
 class StatusManager:
+    """ Manager class for status CRUD operations
+    """
     def __init__(self, **kwargs):
+        """ Constructor for StatusManager
+        Args:
+            **kwargs:   Optional Dependencies
+                status_data (StatusData)
+        """
         self.__status_data: StatusData = kwargs.get("status_data") or StatusData()
 
     def get_all(self) -> DataList:
+        """ Get all statuses
+        Returns:
+            DataList
+        """
         result = self.__status_data.load_all()
         if not result.get_status():
             raise Exception("Failed to load statuses")

@@ -7,7 +7,11 @@ from modules.util.objects.result import Result
 
 @singleton
 class PostgresConnManager:
+    """ Manager class for postgres database operations
+    """
     def __init__(self):
+        """ Constructor for PostgresConnManager
+        """
         environment: Environment = Environment()
         self.__connection = psycopg2.connect(
             host=environment.get(environment.POSTGRES_HOST),
@@ -17,12 +21,27 @@ class PostgresConnManager:
         )
 
     def get_connection(self):
+        """ Get connection
+        Returns:
+            conn
+        """
         return self.__connection
 
     def get_cursor(self):
+        """ Get cursor
+        Returns:
+            cursor
+        """
         return self.__connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
     def insert(self, sql: str, params=None) -> Result:
+        """ Perform generic insert statement
+        Args:
+            sql (str):                      SQL statement
+            params (tuple|dict):            Params for binding
+        Returns:
+            Result
+        """
         cursor = self.get_cursor()
         try:
             if params is None:
@@ -40,6 +59,13 @@ class PostgresConnManager:
             cursor.close()
 
     def select(self, sql: str, params=None):
+        """ Perform generic select statement
+        Args:
+            sql (str):                      SQL statement
+            params (tuple|dict):            Params for binding
+        Returns:
+            Result
+        """
         cursor = self.get_cursor()
         try:
             if params is None:
@@ -55,6 +81,13 @@ class PostgresConnManager:
             cursor.close()
 
     def query(self, sql: str, params=None):
+        """ Perform generic query
+        Args:
+            sql (str):                      SQL statement
+            params (tuple|dict):            Params for binding
+        Returns:
+            Result
+        """
         cursor = self.get_cursor()
         try:
             if params is None:

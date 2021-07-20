@@ -5,11 +5,33 @@ from modules.util.objects.result import Result
 
 @singleton
 class EntityData:
+    """ Data class for entity database operations
+    """
     def __init__(self, **kwargs):
+        """ Constructor for EntityData
+        Args:
+            **kwargs: Optional dependencies
+                postgres_conn_manager (PostgresConnManager)
+        """
         self.__postgres_conn_manager: PostgresConnManager = kwargs.get("postgres_conn_manager") or PostgresConnManager()
 
     def insert(self, **kwargs) -> Result:
-        return self.__postgres_conn_manager.insert("", (
+        """ Insert entity
+        Args:
+            **kwargs:
+                name (str)
+                latitude (float)
+                longitude (float)
+                address (str)
+                status_id (ID)
+        Returns:
+            Result
+        """
+        return self.__postgres_conn_manager.insert(f"""
+            INSERT INTO entity.entities(name, latitude, longitude, address, status_id)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id
+        """, (
             kwargs.get("name"),
             kwargs.get("latitude"),
             kwargs.get("longitude"),
@@ -18,54 +40,172 @@ class EntityData:
         ))
 
     def load(self, entity_id) -> Result:
-        return self.__postgres_conn_manager.select("", (entity_id,))
+        """ Load entity by ID
+        Args:
+            entity_id (ID):      Entity ID
+        Returns:
+            Result
+        """
+        return self.__postgres_conn_manager.select(f"""
+            SELECT
+                id,
+                uuid,
+                name,
+                latitude,
+                longitude,
+                address,
+                status_id
+            FROM entity.entities
+            WHERE id = %s
+        """, (entity_id,))
 
     def update(self, entity_id, name: str) -> Result:
-        return self.__postgres_conn_manager.query("", (
+        """ Update entity
+        Args:
+            entity_id (ID):     Entity ID
+            name (str):         Entity name
+        Returns:
+            Result
+        """
+        return self.__postgres_conn_manager.query(f"""
+            UPDATE entity.entities
+            SET name = %s
+            WHERE id = %s
+        """, (
             name,
             entity_id
         ))
 
-    def update_location(self, entity_id, **kwargs):
-        return self.__postgres_conn_manager.query("", (
+    def update_location(self, entity_id, **kwargs) -> Result:
+        """ Update location
+        Args:
+            entity_id (ID):         Entity ID
+            **kwargs:
+                latitude (float)
+                longitude (float)
+                address (str)
+        Returns:
+            Result
+        """
+        return self.__postgres_conn_manager.query(f"""
+            UPDATE entity.entities
+            SET latitude = %s,
+                longitude = %s,
+                address = %s
+            WHERE id = %s
+        """, (
             kwargs.get("latitude"),
             kwargs.get("longitude"),
             kwargs.get("address"),
             entity_id
         ))
 
-    def update_status(self, entity_id, status_id):
-        return self.__postgres_conn_manager.query("", (
+    def update_status(self, entity_id, status_id) -> Result:
+        """ Update status
+        Args:
+            entity_id (ID):      Entity ID
+            status_id (ID):      Status ID
+        Returns:
+            Result
+        """
+        return self.__postgres_conn_manager.query(f"""
+            UPDATE entity.entities
+            SET status_id = %s
+            WHERE id = %s
+        """, (
             status_id,
             entity_id
         ))
 
     def search(self, **kwargs) -> Result:
+        """ Search entities by parameters
+        Args:
+            **kwargs:
+                name (str)
+                address (str)
+                statuses (list)
+        Returns:
+            Result
+        """
+        name = kwargs.get("name") or ""
+        address = kwargs.get("address") or ""
+        statuses = kwargs.get("statuses") or []
         params = (
-            kwargs.get("name") or "",
-            kwargs.get("address") or ""
+            f"%{name}%",
+            f"%{address}%"
         )
-        status_query_string = self.__build_or_search("status_id", kwargs.get("statuses") or [], params)
+
+        query_parts = []
+        for status_id in statuses:
+            query_parts.append(f"status_id = %s")
+            params += (status_id,)
+        status_query_string = f"AND ({' OR '.join(query_parts)})" if len(query_parts) != 0 else ""
+
         return self.__postgres_conn_manager.select(f"""
+            SELECT
+                id,
+                uuid,
+                name,
+                latitude,
+                longitude,
+                address,
+                status_id
+            FROM entity.entities
+            WHERE (
+                name LIKE %s
+                AND address LIKE %s
+            )
             {status_query_string}
+            ORDER BY name ASC
         """, params)
 
-    def search_nearby(self, latitude: float, longitude: float, miles: int) -> Result:
+    def search_nearby(self, latitude: float, longitude: float, miles: int, **kwargs) -> Result:
+        """ Search nearby entities by location
+        Args:
+            latitude (float):       Latitude coordinate
+            longitude (float):      Longitude coordinate
+            miles (int):            Miles to search within
+            **kwargs:
+                name (str)
+                address (str)
+                statuses (list)
+        Returns:
+            Result
         """
-            select SQRT(POW(69.1 * (latitude::float -  p_lat::float), 2) +
-                POW(69.1 * (p_lon::float - longitude::float) * COS(latitude::float / 57.3), 2)
-            )
-        """
-        return self.__postgres_conn_manager.select("", (
-            latitude,
+        name = kwargs.get("name") or ""
+        address = kwargs.get("address") or ""
+        statuses = kwargs.get("statuses") or []
+        params = (
             longitude,
+            latitude,
+            f"%{name}%",
+            f"%{address}%",
             miles
-        ))
+        )
 
-    @classmethod
-    def __build_or_search(cls, column: str, items: list, params) -> str:
         query_parts = []
-        for item in items:
-            query_parts.append(f"{column} = %s")
-            params += (item,)
-        return f"AND ({' OR '.join(query_parts)})" if len(query_parts) != 0 else ""
+        for status_id in statuses:
+            query_parts.append(f"status_id = %s")
+            params += (status_id,)
+        status_query_string = f"AND ({' OR '.join(query_parts)})" if len(query_parts) != 0 else ""
+
+        return self.__postgres_conn_manager.select(f"""
+            SELECT
+                entities.id,
+                entities.uuid,
+                entities.name,
+                entities.latitude,
+                entities.longitude,
+                entities.address,
+                entities.status_id,
+                entities.distance
+            FROM (
+                SELECT *, (point(%s, %s) <@> point(longitude, latitude)) AS distance
+                FROM entity.entities
+            ) AS entities    
+            WHERE name LIKE %s
+            AND address LIKE %s
+            AND distance < %s
+            {status_query_string}
+            ORDER BY distance ASC
+        """, params)

@@ -1,7 +1,9 @@
 from argparse import ArgumentParser
-
 from environment import Environment
 from modules.migration.managers.migration_manager import MigrationManager
+
+""" Script for running database migrations
+"""
 
 
 def parse_args():
@@ -55,4 +57,11 @@ if __name__ == '__main__':
     environment.set(environment.POSTGRES_DB_NAME, args.postgres_db)
 
     migration_manager = MigrationManager()
-    migration_manager.migrate(args.directory)
+    print("running migration...")
+    result = migration_manager.migrate(args.directory)
+    completed = result.get_data()
+    if not result.get_status():
+        print(result.get_message())
+    for script in completed:
+        print(f"{script} ran successfully")
+    print(f"{len(completed)} scripts completed")

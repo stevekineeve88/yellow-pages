@@ -312,7 +312,13 @@ class EntityManagerTest(unittest.TestCase):
             "",
             [entity_1, entity_2]
         ))
-        entities = self.entity_manager.search_nearby(123.123, 456.456, 10)
+        entities = self.entity_manager.search_nearby(
+            123.123,
+            456.456,
+            10,
+            name="Some Name",
+            statuses=[self.status_active.get_id()]
+        )
         self.postgres_conn_manager.select.assert_called_once()
         entity_obj_1: Entity = entities[0]
         entity_obj_2: Entity = entities[1]
