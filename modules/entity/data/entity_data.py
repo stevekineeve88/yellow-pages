@@ -11,7 +11,6 @@ class EntityData:
     def insert(self, **kwargs) -> Result:
         return self.__postgres_conn_manager.insert("", (
             kwargs.get("name"),
-            kwargs.get("type_id"),
             kwargs.get("latitude"),
             kwargs.get("longitude"),
             kwargs.get("address"),
@@ -46,10 +45,8 @@ class EntityData:
             kwargs.get("name") or "",
             kwargs.get("address") or ""
         )
-        type_query_string = self.__build_or_search("type_id", kwargs.get("types") or [], params)
         status_query_string = self.__build_or_search("status_id", kwargs.get("statuses") or [], params)
         return self.__postgres_conn_manager.select(f"""
-            {type_query_string} 
             {status_query_string}
         """, params)
 

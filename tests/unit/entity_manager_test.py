@@ -6,10 +6,8 @@ from modules.entity.exceptions.entity_search_error import EntitySearchError
 from modules.entity.exceptions.entity_update_error import EntityUpdateError
 from modules.entity.managers.entity_manager import EntityManager
 from modules.entity.managers.status_manager import StatusManager
-from modules.entity.managers.type_manager import TypeManager
 from modules.entity.objects.entity import Entity
 from modules.entity.objects.status import Status
-from modules.entity.objects.type import Type
 from modules.util.exceptions.data_list_item_exception import DataListItemException
 from modules.util.exceptions.geo_locator_error import GeoLocatorError
 from modules.util.managers.geo_locator_manager import GeoLocatorManager
@@ -23,21 +21,11 @@ class EntityManagerTest(unittest.TestCase):
     @classmethod
     @patch("modules.util.managers.postgres_conn_manager.PostgresConnManager")
     @patch("modules.util.managers.geo_locator_manager.GeoLocatorManager")
-    @patch("modules.entity.managers.type_manager.TypeManager")
     @patch("modules.entity.managers.status_manager.StatusManager")
-    def setUpClass(cls, postgres_conn_manager, geo_locator_manager, type_manager, status_manager) -> None:
+    def setUpClass(cls, postgres_conn_manager, geo_locator_manager, status_manager) -> None:
         cls.postgres_conn_manager: PostgresConnManager = postgres_conn_manager
         cls.geo_locator_manager: GeoLocatorManager = geo_locator_manager
-        cls.type_manager: TypeManager = type_manager
         cls.status_manager: StatusManager = status_manager
-
-        cls.test_type = Type(1, "TEST", "This is a test type")
-        cls.type_manager.get_all = MagicMock(return_value=DataList(
-            "TYPES",
-            [cls.test_type],
-            "id",
-            "const"
-        ))
 
         cls.status_active = Status(1, "ACTIVE", "Active Status")
         cls.status_deleted = Status(2, "DELETED", "Deleted Status")
@@ -53,7 +41,6 @@ class EntityManagerTest(unittest.TestCase):
                 postgres_conn_manager=cls.postgres_conn_manager
             ),
             geo_locator_manager=cls.geo_locator_manager,
-            type_manager=cls.type_manager,
             status_manager=cls.status_manager
         )
 
@@ -61,7 +48,6 @@ class EntityManagerTest(unittest.TestCase):
         entity_id = 1
         uuid = "ERT-345"
         name = "Entity"
-        type_id = self.test_type.get_id()
         status_id = self.status_active.get_id()
         latitude = 30.456
         longitude = 43.123
@@ -77,7 +63,6 @@ class EntityManagerTest(unittest.TestCase):
                 "id": entity_id,
                 "uuid": uuid,
                 "name": name,
-                "type_id": type_id,
                 "status_id": status_id,
                 "latitude": latitude,
                 "longitude": longitude,
@@ -92,14 +77,12 @@ class EntityManagerTest(unittest.TestCase):
 
         created_entity = self.entity_manager.create(
             name=name,
-            type_id=type_id,
             address=address
         )
         self.postgres_conn_manager.insert.assert_called_once()
         self.postgres_conn_manager.select.assert_called_once()
         self.geo_locator_manager.get_by_address.assert_called_once_with(address)
         self.assertEqual(entity_id, created_entity.get_id())
-        self.assertEqual(type_id, created_entity.get_type().get_id())
         self.assertEqual(status_id, created_entity.get_status().get_id())
         self.assertEqual(name, created_entity.get_name())
         self.assertEqual(latitude, created_entity.get_location().get_latitude())
@@ -112,7 +95,6 @@ class EntityManagerTest(unittest.TestCase):
         with self.assertRaises(GeoLocatorError):
             self.entity_manager.create(
                 name="name",
-                type_id="type_id",
                 address="Fake Address"
             )
             self.postgres_conn_manager.insert.assert_not_called()
@@ -142,7 +124,6 @@ class EntityManagerTest(unittest.TestCase):
             id=1,
             uuid="ERT-345",
             name="Entity",
-            type=self.test_type,
             location=Location(30.456, 43.123, "Some address")
         )
         self.postgres_conn_manager.query = MagicMock(return_value=Result(True))
@@ -160,7 +141,6 @@ class EntityManagerTest(unittest.TestCase):
                     id=1,
                     uuid="ERT-345",
                     name="Some Name",
-                    type=self.test_type,
                     location=Location(30.456, 43.123, "Some address")
                 )
             )
@@ -178,7 +158,6 @@ class EntityManagerTest(unittest.TestCase):
                 "id": entity_id,
                 "uuid": "ERT-1234",
                 "name": "Name",
-                "type_id": self.test_type.get_id(),
                 "status_id": self.status_active.get_id(),
                 "latitude": location.get_latitude(),
                 "longitude": location.get_longitude(),
@@ -232,7 +211,6 @@ class EntityManagerTest(unittest.TestCase):
                 "id": entity_id,
                 "uuid": "ERT-1234",
                 "name": "Name",
-                "type_id": self.test_type.get_id(),
                 "status_id": status_id,
                 "latitude": 123.123,
                 "longitude": 456.456,
@@ -262,7 +240,6 @@ class EntityManagerTest(unittest.TestCase):
             "id": 1,
             "uuid": "ID1",
             "name": "Name 1",
-            "type_id": self.test_type.get_id(),
             "status_id": self.status_active.get_id(),
             "latitude": 123.123,
             "longitude": 456.456,
@@ -272,7 +249,6 @@ class EntityManagerTest(unittest.TestCase):
             "id": 2,
             "uuid": "ID2",
             "name": "Name 2",
-            "type_id": self.test_type.get_id(),
             "status_id": self.status_active.get_id(),
             "latitude": 456.456,
             "longitude": 789.789,
@@ -285,7 +261,6 @@ class EntityManagerTest(unittest.TestCase):
         ))
         entities = self.entity_manager.search(
             name="Some Address",
-            types=[self.test_type.get_id()],
             statuses=[self.status_active.get_id()],
             address="Some Address"
         )
@@ -295,7 +270,6 @@ class EntityManagerTest(unittest.TestCase):
         self.assertEqual(entity_1["id"], entity_obj_1.get_id())
         self.assertEqual(entity_1["uuid"], entity_obj_1.get_uuid())
         self.assertEqual(entity_1["name"], entity_obj_1.get_name())
-        self.assertEqual(entity_1["type_id"], entity_obj_1.get_type().get_id())
         self.assertEqual(entity_1["status_id"], entity_obj_1.get_status().get_id())
         self.assertEqual(entity_1["latitude"], entity_obj_1.get_location().get_latitude())
         self.assertEqual(entity_1["longitude"], entity_obj_1.get_location().get_longitude())
@@ -304,7 +278,6 @@ class EntityManagerTest(unittest.TestCase):
         self.assertEqual(entity_2["id"], entity_obj_2.get_id())
         self.assertEqual(entity_2["uuid"], entity_obj_2.get_uuid())
         self.assertEqual(entity_2["name"], entity_obj_2.get_name())
-        self.assertEqual(entity_2["type_id"], entity_obj_2.get_type().get_id())
         self.assertEqual(entity_2["status_id"], entity_obj_2.get_status().get_id())
         self.assertEqual(entity_2["latitude"], entity_obj_2.get_location().get_latitude())
         self.assertEqual(entity_2["longitude"], entity_obj_2.get_location().get_longitude())
@@ -320,7 +293,6 @@ class EntityManagerTest(unittest.TestCase):
             "id": 1,
             "uuid": "ID1",
             "name": "Name 1",
-            "type_id": self.test_type.get_id(),
             "status_id": self.status_active.get_id(),
             "latitude": 123.123,
             "longitude": 456.456,
@@ -330,7 +302,6 @@ class EntityManagerTest(unittest.TestCase):
             "id": 2,
             "uuid": "ID2",
             "name": "Name 2",
-            "type_id": self.test_type.get_id(),
             "status_id": self.status_active.get_id(),
             "latitude": 456.456,
             "longitude": 789.789,
@@ -348,7 +319,6 @@ class EntityManagerTest(unittest.TestCase):
         self.assertEqual(entity_1["id"], entity_obj_1.get_id())
         self.assertEqual(entity_1["uuid"], entity_obj_1.get_uuid())
         self.assertEqual(entity_1["name"], entity_obj_1.get_name())
-        self.assertEqual(entity_1["type_id"], entity_obj_1.get_type().get_id())
         self.assertEqual(entity_1["status_id"], entity_obj_1.get_status().get_id())
         self.assertEqual(entity_1["latitude"], entity_obj_1.get_location().get_latitude())
         self.assertEqual(entity_1["longitude"], entity_obj_1.get_location().get_longitude())
@@ -357,7 +327,6 @@ class EntityManagerTest(unittest.TestCase):
         self.assertEqual(entity_2["id"], entity_obj_2.get_id())
         self.assertEqual(entity_2["uuid"], entity_obj_2.get_uuid())
         self.assertEqual(entity_2["name"], entity_obj_2.get_name())
-        self.assertEqual(entity_2["type_id"], entity_obj_2.get_type().get_id())
         self.assertEqual(entity_2["status_id"], entity_obj_2.get_status().get_id())
         self.assertEqual(entity_2["latitude"], entity_obj_2.get_location().get_latitude())
         self.assertEqual(entity_2["longitude"], entity_obj_2.get_location().get_longitude())

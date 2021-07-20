@@ -4,7 +4,6 @@ from modules.entity.exceptions.entity_creation_error import EntityCreationError
 from modules.entity.exceptions.entity_search_error import EntitySearchError
 from modules.entity.exceptions.entity_update_error import EntityUpdateError
 from modules.entity.managers.status_manager import StatusManager
-from modules.entity.managers.type_manager import TypeManager
 from modules.entity.objects.entity import Entity
 from modules.util.exceptions.geo_locator_error import GeoLocatorError
 from modules.util.managers.geo_locator_manager import GeoLocatorManager
@@ -16,8 +15,6 @@ class EntityManager:
     def __init__(self, **kwargs):
         self.__entity_data: EntityData = kwargs.get("entity_data") or EntityData()
         self.__geo_locator_manager: GeoLocatorManager = kwargs.get("geo_locator_manager") or GeoLocatorManager()
-        type_manager: TypeManager = kwargs.get("type_manager") or TypeManager()
-        self.__types = type_manager.get_all()
         status_manager: StatusManager = kwargs.get("status_manager") or StatusManager()
         self.__statuses = status_manager.get_all()
 
@@ -29,7 +26,6 @@ class EntityManager:
         name = kwargs.get("name")
         result = self.__entity_data.insert(
             name=name,
-            type_id=kwargs.get("type_id"),
             status_id=self.__statuses.ACTIVE,
             latitude=location.get_latitude(),
             longitude=location.get_longitude(),
@@ -96,7 +92,6 @@ class EntityManager:
             id=data["id"],
             uuid=data["uuid"],
             name=data["name"],
-            type=self.__types.get_by_id(data["type_id"]),
             status=self.__statuses.get_by_id(data["status_id"]),
             location=Location(data["latitude"], data["longitude"], data["address"])
         )
