@@ -1,0 +1,2 @@
+class EntitySearchError(Exception):
+    pass

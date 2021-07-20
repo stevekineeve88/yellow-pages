@@ -1,0 +1,2 @@
+class GeoLocatorError(Exception):
+    pass

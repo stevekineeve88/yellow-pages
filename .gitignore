@@ -1,1 +1,4 @@
 .idea/
+venv/
+docker-resources/env/db.env
+tests/docker-resources/env/db.env

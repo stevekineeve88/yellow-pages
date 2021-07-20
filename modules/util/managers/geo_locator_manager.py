@@ -5,7 +5,7 @@ from modules.util.objects.result import Result
 
 
 @singleton
-class GeolocatorManager:
+class GeoLocatorManager:
     def __init__(self):
         self.__geolocator = Nominatim(user_agent="yellow-pages")
 
