@@ -1,0 +1,12 @@
+""" Create a config.py file in this directory.
+    Paste this function and add values to keys
+    to connect to a test database.
+"""
+
+def config():
+    return {
+        Environment.POSTGRES_HOST: "",
+        Environment.POSTGRES_USER: "",
+        Environment.POSTGRES_PASS: "",
+        Environment.POSTGRES_DB_NAME: "",
+    }

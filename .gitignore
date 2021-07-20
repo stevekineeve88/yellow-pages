@@ -1,1 +1,6 @@
 .idea/
+venv/
+docker-resources/env/db.env
+tests/docker-resources/env/db.env
+tests/integration/setup/config/config.py
+*.pyc
