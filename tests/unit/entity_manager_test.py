@@ -72,7 +72,7 @@ class EntityManagerTest(unittest.TestCase):
         self.geo_locator_manager.get_by_address = MagicMock(return_value=Result(
             True,
             "",
-            [Location(latitude, longitude, address)]
+            [Location(latitude, longitude, "Some random location")]
         ))
 
         created_entity = self.entity_manager.create(
@@ -148,7 +148,8 @@ class EntityManagerTest(unittest.TestCase):
 
     def test_update_location_updates_entity_location(self):
         entity_id = 1
-        location = Location(123.123, 456.456, "Some address")
+        new_address = "New Address"
+        location = Location(123.123, 456.456, "Some random address")
 
         self.postgres_conn_manager.query = MagicMock(return_value=Result(True))
         self.postgres_conn_manager.select = MagicMock(return_value=Result(
@@ -161,7 +162,7 @@ class EntityManagerTest(unittest.TestCase):
                 "status_id": self.status_active.get_id(),
                 "latitude": location.get_latitude(),
                 "longitude": location.get_longitude(),
-                "address": location.get_address()
+                "address": new_address
             }]
         ))
         self.geo_locator_manager.get_by_address = MagicMock(return_value=Result(
@@ -170,14 +171,14 @@ class EntityManagerTest(unittest.TestCase):
             [location]
         ))
 
-        entity = self.entity_manager.update_location(entity_id, location.get_address())
+        entity = self.entity_manager.update_location(entity_id, new_address)
         self.postgres_conn_manager.query.assert_called_once()
         self.postgres_conn_manager.select.assert_called_once()
-        self.geo_locator_manager.get_by_address.assert_called_once_with(location.get_address())
+        self.geo_locator_manager.get_by_address.assert_called_once_with(new_address)
         self.assertEqual(entity_id, entity.get_id())
         self.assertEqual(location.get_latitude(), entity.get_location().get_latitude())
         self.assertEqual(location.get_longitude(), entity.get_location().get_longitude())
-        self.assertEqual(location.get_address(), entity.get_location().get_address())
+        self.assertEqual(new_address, entity.get_location().get_address())
 
     def test_update_location_fails_on_invalid_address(self):
         self.geo_locator_manager.get_by_address = MagicMock(return_value=Result(False))

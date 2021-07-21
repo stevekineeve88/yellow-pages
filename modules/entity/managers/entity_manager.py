@@ -36,7 +36,8 @@ class EntityManager:
         Returns:
             Entity
         """
-        result = self.__geo_locator_manager.get_by_address(kwargs.get("address"))
+        address = kwargs.get("address")
+        result = self.__geo_locator_manager.get_by_address(address)
         if not result.get_status():
             raise GeoLocatorError(result.get_message())
         location = result.get_data()[0]
@@ -46,7 +47,7 @@ class EntityManager:
             status_id=self.__statuses.ACTIVE.get_id(),
             latitude=location.get_latitude(),
             longitude=location.get_longitude(),
-            address=location.get_address()
+            address=address
         )
         if not result.get_status():
             raise EntityCreationError(f"Could not create entity with name {name}")
@@ -90,7 +91,7 @@ class EntityManager:
             entity_id,
             latitude=location.get_latitude(),
             longitude=location.get_longitude(),
-            address=location.get_address()
+            address=address
         )
         if not result.get_status():
             raise EntityUpdateError(f"Could not update entity id {entity_id}")
