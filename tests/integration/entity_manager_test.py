@@ -18,27 +18,28 @@ class EntityManagerTest(IntegrationSetup):
         statuses = cls.status_manager.get_all()
         cls.status_active: Status = statuses.ACTIVE
         cls.status_deleted: Status = statuses.DELETED
-        cls.real_address = "Empire State Building New York City NY"
 
     def test_create_creates_entity_successfully(self):
+        name = "Momma's Chicken Parm"
+        address = "Empire State Building New York City NY"
         entity = self.entity_manager.create(
-            name="Momma's Chicken Parm",
-            address=self.real_address
+            name=name,
+            address=address
         )
         entity_retrieved = self.entity_manager.get(entity.get_id())
         self.assertEqual(entity.get_id(), entity_retrieved.get_id())
         self.assertEqual(entity.get_uuid(), entity_retrieved.get_uuid())
-        self.assertEqual(entity.get_name(), entity_retrieved.get_name())
+        self.assertEqual(name, entity_retrieved.get_name())
         self.assertEqual(entity.get_location().get_latitude(), entity_retrieved.get_location().get_latitude())
         self.assertEqual(entity.get_location().get_longitude(), entity_retrieved.get_location().get_longitude())
-        self.assertEqual(entity.get_location().get_address(), entity_retrieved.get_location().get_address())
+        self.assertEqual(address, entity_retrieved.get_location().get_address())
 
     def test_update_updates_name_successfully(self):
         old_name = "old name"
         new_name = "new name"
         created_entity = self.entity_manager.create(
             name=old_name,
-            address=self.real_address
+            address="Empire State Building New York City NY"
         )
         old_entity = self.entity_manager.get(created_entity.get_id())
         self.assertEqual(old_name, old_entity.get_name())
@@ -49,10 +50,10 @@ class EntityManagerTest(IntegrationSetup):
         self.assertEqual(new_name, new_entity.get_name())
 
     def test_update_location_updates_location_successfully(self):
-        old_address = self.real_address
+        old_address = "Empire State Building New York City NY"
         new_address = "Statue of Liberty New York City NY"
 
-        result = self.geo_locator_manager.get_by_address(self.real_address)
+        result = self.geo_locator_manager.get_by_address(old_address)
         old_location: Location = result.get_data()[0]
         result = self.geo_locator_manager.get_by_address(new_address)
         new_location: Location = result.get_data()[0]
@@ -63,18 +64,18 @@ class EntityManagerTest(IntegrationSetup):
         )
         self.assertEqual(old_location.get_latitude(), created_entity.get_location().get_latitude())
         self.assertEqual(old_location.get_longitude(), created_entity.get_location().get_longitude())
-        self.assertEqual(old_location.get_address(), created_entity.get_location().get_address())
+        self.assertEqual(old_address, created_entity.get_location().get_address())
 
         self.entity_manager.update_location(created_entity.get_id(), new_address)
         new_entity = self.entity_manager.get(created_entity.get_id())
         self.assertEqual(new_location.get_latitude(), new_entity.get_location().get_latitude())
         self.assertEqual(new_location.get_longitude(), new_entity.get_location().get_longitude())
-        self.assertEqual(new_location.get_address(), new_entity.get_location().get_address())
+        self.assertEqual(new_address, new_entity.get_location().get_address())
 
     def test_update_status_updates_status_successfully(self):
         entity = self.entity_manager.create(
             name="Some Name",
-            address=self.real_address
+            address="Empire State Building New York City NY"
         )
         self.assertEqual(self.status_active.get_id(), entity.get_status().get_id())
         self.entity_manager.update_status(entity.get_id(), self.status_deleted.get_id())
@@ -82,23 +83,24 @@ class EntityManagerTest(IntegrationSetup):
         self.assertEqual(self.status_deleted.get_id(), new_entity.get_status().get_id())
 
     def test_search_retrieves_expected_result(self):
-        other_address = "Statue of Liberty New York City NY"
+        empire_st_building = "Empire State Building New York City NY"
+        statue_of_liberty = "Statue of Liberty New York City NY"
         self.entity_manager.create(
             name="Some Name",
-            address=self.real_address
+            address=empire_st_building
         )
         self.entity_manager.create(
             name="Some Name 2",
-            address=self.real_address
+            address=empire_st_building
         )
         entity = self.entity_manager.create(
             name="Some Name 3",
-            address=self.real_address
+            address=empire_st_building
         )
         self.entity_manager.update_status(entity.get_id(), self.status_deleted.get_id())
         self.entity_manager.create(
             name="Other Name",
-            address=other_address
+            address=statue_of_liberty
         )
 
         entities = self.entity_manager.search(
