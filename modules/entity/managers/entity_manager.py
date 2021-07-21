@@ -7,6 +7,7 @@ from modules.entity.managers.status_manager import StatusManager
 from modules.entity.objects.entity import Entity
 from modules.util.exceptions.geo_locator_error import GeoLocatorError
 from modules.util.managers.geo_locator_manager import GeoLocatorManager
+from modules.util.objects.data_list import DataList
 from modules.util.objects.location import Location
 
 
@@ -25,7 +26,7 @@ class EntityManager:
         self.__entity_data: EntityData = kwargs.get("entity_data") or EntityData()
         self.__geo_locator_manager: GeoLocatorManager = kwargs.get("geo_locator_manager") or GeoLocatorManager()
         status_manager: StatusManager = kwargs.get("status_manager") or StatusManager()
-        self.__statuses = status_manager.get_all()
+        self.__statuses: DataList = status_manager.get_all()
 
     def create(self, **kwargs) -> Entity:
         """ Create entity

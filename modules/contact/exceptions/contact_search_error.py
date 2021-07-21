@@ -1,0 +1,2 @@
+class ContactSearchError(Exception):
+    pass

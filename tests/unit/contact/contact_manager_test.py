@@ -1,0 +1,165 @@
+import unittest
+from unittest.mock import patch, MagicMock
+from modules.contact.data.contact_data import ContactData
+from modules.contact.exceptions.contact_add_error import ContactAddError
+from modules.contact.exceptions.contact_parser_error import ContactParserError
+from modules.contact.exceptions.contact_search_error import ContactSearchError
+from modules.contact.exceptions.contact_update_error import ContactUpdateError
+from modules.contact.managers.contact_manager import ContactManager
+from modules.contact.managers.type_manager import TypeManager
+from modules.contact.objects.contact import Contact
+from modules.contact.objects.type import Type
+from modules.util.managers.postgres_conn_manager import PostgresConnManager
+from modules.util.objects.data_list import DataList
+from modules.util.objects.result import Result
+
+
+class ContactManagerTest(unittest.TestCase):
+    @classmethod
+    @patch("modules.util.managers.postgres_conn_manager.PostgresConnManager")
+    @patch("modules.contact.managers.type_manager.TypeManager")
+    def setUpClass(cls, postgres_conn_manager, type_manager) -> None:
+        cls.postgres_conn_manager: PostgresConnManager = postgres_conn_manager
+        cls.type_manager: TypeManager = type_manager
+
+        cls.type_phone = Type(1, "PHONE", "Phone")
+        cls.type_email = Type(2, "EMAIL", "Email")
+        cls.type_website = Type(3, "WEBSITE", "Website")
+        cls.type_manager.get_all = MagicMock(return_value=DataList(
+            "TYPES",
+            [cls.type_phone, cls.type_email, cls.type_website],
+            "id",
+            "const"
+        ))
+        cls.contact_manager: ContactManager = ContactManager(
+            contact_data=ContactData(
+                postgres_conn_manager=cls.postgres_conn_manager
+            ),
+            type_manager=cls.type_manager
+        )
+
+    def test_add_phone_returns_contact(self):
+        self.__check_add(self.type_phone.get_id(), "+14445556666")
+
+    def test_add_email_returns_contact(self):
+        self.__check_add(self.type_email.get_id(), "email@website.com")
+
+    def test_add_website_returns_contact(self):
+        self.__check_add(self.type_website.get_id(), "http://google.com")
+
+    def test_add_phone_fails_on_phone_parse_error(self):
+        self.__check_error_add(self.type_phone.get_id(), "+13333334445555")
+
+    def test_add_email_fails_on_email_parse_error(self):
+        self.__check_error_add(self.type_email.get_id(), "@website.com")
+
+    def test_add_website_fails_on_website_parse_error(self):
+        self.__check_error_add(self.type_website.get_id(), "example.com")
+
+    def test_add_fails_on_add_error(self):
+        self.postgres_conn_manager.insert = MagicMock(return_value=Result(False))
+        self.postgres_conn_manager.select = MagicMock(return_value=Result(True))
+        with self.assertRaises(ContactAddError):
+            self.contact_manager.add(
+                1,
+                type_id=self.type_phone.get_id(),
+                info="+19998884444"
+            )
+            self.fail("Did not fail")
+        self.postgres_conn_manager.insert.assert_called_once()
+        self.postgres_conn_manager.select.assert_not_called()
+
+    def test_get_fails_on_search_error(self):
+        self.postgres_conn_manager.select = MagicMock(return_value=Result(False))
+        with self.assertRaises(ContactSearchError):
+            self.contact_manager.get(1)
+            self.fail("Did not fail")
+
+    def test_update_updates_contact(self):
+        contact = Contact(
+            id=1,
+            entity_id=123,
+            type=self.type_phone,
+            info="+19998887777",
+            description="Some Description"
+        )
+        self.postgres_conn_manager.query = MagicMock(return_value=Result(True))
+        try:
+            self.contact_manager.update(contact)
+        except Exception as e:
+            self.fail(str(e))
+
+    def test_update_fails_on_parse_error(self):
+        contact = Contact(
+            id=1,
+            entity_id=123,
+            type=self.type_email,
+            info="+19998887777",
+            description="Some Description"
+        )
+        self.postgres_conn_manager.query = MagicMock(return_value=Result(True))
+        with self.assertRaises(ContactParserError):
+            self.contact_manager.update(contact)
+            self.fail("Did not fail")
+        self.postgres_conn_manager.query.assert_not_called()
+
+    def test_update_fails_on_update_error(self):
+        contact = Contact(
+            id=1,
+            entity_id=123,
+            type=self.type_phone,
+            info="+19998887777",
+            description="Some Description"
+        )
+        self.postgres_conn_manager.query = MagicMock(return_value=Result(False))
+        with self.assertRaises(ContactUpdateError):
+            self.contact_manager.update(contact)
+            self.fail("Did not fail")
+
+    def __check_add(self, type_id, info: str):
+        contact_id = 1
+        entity_id = 123
+        description = "Owner"
+
+        result = Result(True)
+        result.set_insert_id(contact_id)
+        self.postgres_conn_manager.insert = MagicMock(return_value=result)
+        self.postgres_conn_manager.select = MagicMock(return_value=Result(
+            True,
+            "",
+            [{
+                "id": contact_id,
+                "entity_id": entity_id,
+                "type_id": type_id,
+                "info": info,
+                "description": description
+            }]
+        ))
+        contact = self.contact_manager.add(
+            entity_id,
+            type_id=type_id,
+            info=info,
+            description=description
+        )
+
+        self.postgres_conn_manager.insert.assert_called_once()
+        self.postgres_conn_manager.select.assert_called_once()
+        self.assertEqual(contact_id, contact.get_id())
+        self.assertEqual(entity_id, contact.get_entity_id())
+        self.assertEqual(type_id, contact.get_type().get_id())
+        self.assertEqual(info, contact.get_info())
+        self.assertEqual(description, contact.get_description())
+
+    def __check_error_add(self, type_id, info: str):
+        self.postgres_conn_manager.insert = MagicMock(return_value=Result(True))
+        self.postgres_conn_manager.select = MagicMock(return_value=Result(True))
+        with self.assertRaises(ContactParserError):
+            self.contact_manager.add(
+                123,
+                type_id=type_id,
+                info=info,
+                description="Some description"
+            )
+            self.fail("Did not fail")
+        self.postgres_conn_manager.insert.assert_not_called()
+        self.postgres_conn_manager.select.assert_not_called()

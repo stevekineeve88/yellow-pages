@@ -1,0 +1,2 @@
+class ContactUpdateError(Exception):
+    pass

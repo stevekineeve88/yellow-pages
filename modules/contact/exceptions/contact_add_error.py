@@ -1,0 +1,2 @@
+class ContactAddError(Exception):
+    pass
