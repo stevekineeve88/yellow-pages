@@ -169,6 +169,11 @@ class ContactManagerTest(unittest.TestCase):
         self.postgres_conn_manager.select.assert_called_once()
 
     def __check_add(self, type_id, info: str):
+        """ Check add successful
+        Args:
+            type_id (ID):
+            info (str):
+        """
         contact_id = 1
         entity_id = 123
         description = "Owner"
@@ -203,6 +208,11 @@ class ContactManagerTest(unittest.TestCase):
         self.assertEqual(description, contact.get_description())
 
     def __check_error_add(self, type_id, info: str):
+        """ Check error on add
+        Args:
+            type_id (ID):
+            info (str):
+        """
         self.postgres_conn_manager.insert = MagicMock(return_value=Result(True))
         self.postgres_conn_manager.select = MagicMock(return_value=Result(True))
         with self.assertRaises(ContactParserError):

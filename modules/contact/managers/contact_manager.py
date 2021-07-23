@@ -15,12 +15,30 @@ from modules.util.objects.data_list import DataList
 
 @singleton
 class ContactManager:
+    """ Manager class for contact CRUD operations
+    """
     def __init__(self, **kwargs):
+        """ Constructor for ContactManager
+        Args:
+            **kwargs:   Optional dependencies
+                contact_data (ContactData)
+                type_manager (TypeManager)
+        """
         self.__contact_data: ContactData = kwargs.get("contact_data") or ContactData()
         type_manager: TypeManager = kwargs.get("type_manager") or TypeManager()
         self.__types: DataList = type_manager.get_all()
 
     def add(self, entity_id, **kwargs) -> Contact:
+        """ Add contact to entity
+        Args:
+            entity_id (ID):      Entity ID
+            **kwargs:
+                type_id (ID)
+                info (str)
+                description (str)
+        Returns:
+            Contact
+        """
         type_id = kwargs.get("type_id")
         info = kwargs.get("info")
 
@@ -33,6 +51,10 @@ class ContactManager:
         return self.get(result.get_insert_id())
 
     def update(self, contact: Contact):
+        """ Update contact
+        Args:
+            contact (Contact):      Contact obj with updated info
+        """
         parser = self.__get_parser(contact.get_type().get_id())
         parser.parse(contact.get_info())
 
@@ -45,17 +67,33 @@ class ContactManager:
             raise ContactUpdateError("Could not update contact info")
 
     def delete(self, contact_id):
+        """ Delete contact by ID
+        Args:
+            contact_id (ID):         Contact ID
+        """
         result = self.__contact_data.delete(contact_id)
         if not result.get_status():
             raise ContactDeleteError("Could not delete contact")
 
     def get(self, contact_id) -> Contact:
+        """ Get contact by ID
+        Args:
+            contact_id (ID):         Contact ID
+        Returns:
+            Contact
+        """
         result = self.__contact_data.load(contact_id)
         if len(result.get_data()) == 0:
             raise ContactSearchError("Contact not found")
         return self.__build_contact_object(result.get_data()[0])
 
     def get_by_entity_id(self, entity_id) -> list:
+        """ Get contacts by entity ID
+        Args:
+            entity_id (ID):      Entity ID
+        Returns:
+            list
+        """
         result = self.__contact_data.load_by_entity_id(entity_id)
         if not result.get_status():
             raise ContactSearchError("Could not find contacts for entity")
@@ -66,6 +104,12 @@ class ContactManager:
         return contacts
 
     def __build_contact_object(self, data: dict) -> Contact:
+        """ Build contact object
+        Args:
+            data (dict):
+        Returns:
+            Contact
+        """
         return Contact(
             id=data["id"],
             entity_id=data["entity_id"],
@@ -75,6 +119,12 @@ class ContactManager:
         )
 
     def __get_parser(self, type_id) -> ContactParser:
+        """ Get parser by type ID
+        Args:
+            type_id (ID):        Type ID
+        Returns:
+            ContactParser
+        """
         parsers = {
             self.__types.PHONE.get_id(): PhoneParser(),
             self.__types.EMAIL.get_id(): EmailParser(),

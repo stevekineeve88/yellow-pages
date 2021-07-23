@@ -5,9 +5,25 @@ from modules.util.objects.result import Result
 
 @singleton
 class TypeData:
+    """ Data class for type database operations
+    """
     def __init__(self, **kwargs):
+        """ Constructor for TypeData
+        Args:
+            **kwargs:   Optional dependencies
+                postgres_conn_manager (PostgresConnManager)
+        """
         self.__postgres_conn_manager: PostgresConnManager = kwargs.get("postgres_conn_manager") or PostgresConnManager()
 
     def load_all(self) -> Result:
+        """ Load all types
+        Returns:
+            Result
+        """
         return self.__postgres_conn_manager.select(f"""
+            SELECT
+                id,
+                const,
+                description
+            FROM contact.types
         """)

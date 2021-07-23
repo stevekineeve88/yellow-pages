@@ -4,7 +4,13 @@ import phonenumbers
 
 
 class PhoneParser(ContactParser):
+    """ Child ContactParser object for parsing phones
+    """
     def parse(self, info: str):
+        """ Parse phone
+        Args:
+            info (str):
+        """
         phone_number = phonenumbers.parse(info)
         if not phonenumbers.is_possible_number(phone_number):
             raise ContactParserError("Invalid phone number")

@@ -82,7 +82,7 @@ class EntityManagerTest(IntegrationSetup):
         new_entity = self.entity_manager.get(entity.get_id())
         self.assertEqual(self.status_deleted.get_id(), new_entity.get_status().get_id())
 
-    def test_search_retrieves_expected_result(self):
+    def test_search_returns_expected_search(self):
         empire_st_building = "Empire State Building New York City NY"
         statue_of_liberty = "Statue of Liberty New York City NY"
         self.entity_manager.create(
@@ -190,5 +190,5 @@ class EntityManagerTest(IntegrationSetup):
     def tearDown(self) -> None:
         postgres_conn_manager: PostgresConnManager = PostgresConnManager()
         postgres_conn_manager.query(f"""
-            TRUNCATE entity.entities
+            TRUNCATE entity.entities CASCADE
         """)

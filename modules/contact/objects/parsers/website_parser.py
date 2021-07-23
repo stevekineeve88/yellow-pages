@@ -4,7 +4,13 @@ import re
 
 
 class WebsiteParser(ContactParser):
+    """ Child ContactParser object for parsing websites
+    """
     def parse(self, info: str):
+        """ Parse website
+        Args:
+            info (str):
+        """
         regex = re.compile(
             r'^(?:http|ftp)s?://'
             r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'
