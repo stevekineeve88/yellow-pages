@@ -97,7 +97,8 @@ class EntityManagerTest(unittest.TestCase):
                 name="name",
                 address="Fake Address"
             )
-            self.postgres_conn_manager.insert.assert_not_called()
+            self.fail("Did not fail")
+        self.postgres_conn_manager.insert.assert_not_called()
 
     def test_create_fails_on_create_error(self):
         self.geo_locator_manager.get_by_address = MagicMock(return_value=Result(
@@ -111,13 +112,15 @@ class EntityManagerTest(unittest.TestCase):
             self.entity_manager.create(
                 address="Some Address"
             )
-            self.postgres_conn_manager.insert.assert_called_once()
-            self.postgres_conn_manager.select.assert_not_called()
+            self.fail("Did not fail")
+        self.postgres_conn_manager.insert.assert_called_once()
+        self.postgres_conn_manager.select.assert_not_called()
 
     def test_get_fails_on_search_error(self):
         self.postgres_conn_manager.select = MagicMock(return_value=Result(False))
         with self.assertRaises(EntitySearchError):
             self.entity_manager.get(1)
+            self.fail("Did not fail")
 
     def test_update_updates_entity(self):
         entity = Entity(
@@ -144,7 +147,8 @@ class EntityManagerTest(unittest.TestCase):
                     location=Location(30.456, 43.123, "Some address")
                 )
             )
-            self.postgres_conn_manager.query.assert_called_once()
+            self.fail("Did not fail")
+        self.postgres_conn_manager.query.assert_called_once()
 
     def test_update_location_updates_entity_location(self):
         entity_id = 1
@@ -185,7 +189,8 @@ class EntityManagerTest(unittest.TestCase):
         self.postgres_conn_manager.query = MagicMock(return_value=Result(True))
         with self.assertRaises(GeoLocatorError):
             self.entity_manager.update_location(1, "Fake Address")
-            self.postgres_conn_manager.query.assert_not_called()
+            self.fail("Did not fail")
+        self.postgres_conn_manager.query.assert_not_called()
 
     def test_update_location_fails_on_update_error(self):
         self.geo_locator_manager.get_by_address = MagicMock(return_value=Result(
@@ -197,9 +202,10 @@ class EntityManagerTest(unittest.TestCase):
         self.postgres_conn_manager.select = MagicMock(return_value=Result(True))
         with self.assertRaises(EntityUpdateError):
             self.entity_manager.update_location(1, "Some Address")
-            self.geo_locator_manager.get_by_address.assert_called_once()
-            self.postgres_conn_manager.query.assert_called_once()
-            self.postgres_conn_manager.select.assert_not_called()
+            self.fail("Did not fail")
+        self.geo_locator_manager.get_by_address.assert_called_once()
+        self.postgres_conn_manager.query.assert_called_once()
+        self.postgres_conn_manager.select.assert_not_called()
 
     def test_update_status_updates_entity_status(self):
         entity_id = 1
@@ -228,13 +234,15 @@ class EntityManagerTest(unittest.TestCase):
         self.postgres_conn_manager.query = MagicMock(return_value=Result(True))
         with self.assertRaises(DataListItemException):
             self.entity_manager.update_status(1, 12345)
-            self.postgres_conn_manager.query.assert_not_called()
+            self.fail("Did not fail")
+        self.postgres_conn_manager.query.assert_not_called()
 
     def test_update_status_fails_on_update_error(self):
         self.postgres_conn_manager.query = MagicMock(return_value=Result(False))
         self.postgres_conn_manager.select = MagicMock(return_value=Result(True))
         with self.assertRaises(EntityUpdateError):
             self.entity_manager.update_status(1, self.status_active.get_id())
+            self.fail("Did not fail")
 
     def test_search_gets_entities(self):
         entity_1 = {
@@ -288,6 +296,7 @@ class EntityManagerTest(unittest.TestCase):
         self.postgres_conn_manager.select = MagicMock(return_value=Result(False))
         with self.assertRaises(EntitySearchError):
             self.entity_manager.search()
+            self.fail("Did not fail")
 
     def test_search_nearby_gets_entities(self):
         entity_1 = {
@@ -343,3 +352,4 @@ class EntityManagerTest(unittest.TestCase):
         self.postgres_conn_manager.select = MagicMock(return_value=Result(False))
         with self.assertRaises(EntitySearchError):
             self.entity_manager.search_nearby(123.123, 456.456, 15)
+            self.fail("Did not fail")

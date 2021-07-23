@@ -1,4 +1,5 @@
 from modules.entity.data.status_data import StatusData
+from modules.entity.exceptions.entity_status_error import EntityStatusError
 from modules.entity.objects.status import Status
 from modules.util.objects.data_list import DataList
 
@@ -21,9 +22,9 @@ class StatusManager:
         """
         result = self.__status_data.load_all()
         if not result.get_status():
-            raise Exception("Failed to load statuses")
+            raise EntityStatusError("Failed to load statuses")
         data = result.get_data()
         statuses = []
         for datum in data:
             statuses.append(Status(datum["id"], datum["const"], datum["description"]))
-        return DataList("STATUSES", statuses, "id", "const")
+        return DataList("ENTITY_STATUSES", statuses, "id", "const")
