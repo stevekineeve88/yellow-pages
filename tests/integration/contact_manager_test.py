@@ -1,3 +1,4 @@
+from modules.contact.exceptions.contact_add_error import ContactAddError
 from modules.contact.exceptions.contact_search_error import ContactSearchError
 from modules.contact.managers.contact_manager import ContactManager
 from modules.contact.managers.type_manager import TypeManager
@@ -39,6 +40,16 @@ class ContactManagerTest(IntegrationSetup):
             address="Empire State Building, New York City, NY"
         )
         self.__check_add(entity, self.types.WEBSITE, "https://google.com", "Some website")
+
+    def test_add_fails_on_unknown_entity(self):
+        with self.assertRaises(ContactAddError):
+            self.contact_manager.add(
+                123,
+                type_id=self.types.PHONE.get_id(),
+                info="+19998887777",
+                description="Some Description"
+            )
+            self.fail("Did not fail to add contact")
 
     def test_update_update_contact(self):
         entity = self.entity_manager.create(
