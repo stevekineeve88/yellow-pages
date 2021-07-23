@@ -87,6 +87,7 @@ class ContactManagerTest(unittest.TestCase):
         self.postgres_conn_manager.query = MagicMock(return_value=Result(True))
         try:
             self.contact_manager.update(contact)
+            self.postgres_conn_manager.query.assert_called_once()
         except Exception as e:
             self.fail(str(e))
 
