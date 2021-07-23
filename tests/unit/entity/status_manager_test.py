@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from modules.entity.data.status_data import StatusData
+from modules.entity.exceptions.entity_status_error import EntityStatusError
 from modules.entity.managers.status_manager import StatusManager
 from modules.util.managers.postgres_conn_manager import PostgresConnManager
 from modules.util.objects.result import Result
@@ -43,3 +44,10 @@ class StatusManagerTest(unittest.TestCase):
         self.assertEqual(status_2["id"], statuses.STATUS2.get_id())
         self.assertEqual(status_2["const"], statuses.STATUS2.get_const())
         self.assertEqual(status_2["description"], statuses.STATUS2.get_description())
+
+    def test_get_all_fails_on_status_error(self):
+        self.postgres_conn_manager.select = MagicMock(return_value=Result(False))
+        with self.assertRaises(EntityStatusError):
+            self.status_manager.get_all()
+            self.fail("Did not fail")
+        self.postgres_conn_manager.select.assert_called_once()

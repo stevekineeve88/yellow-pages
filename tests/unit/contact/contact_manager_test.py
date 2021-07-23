@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from modules.contact.data.contact_data import ContactData
 from modules.contact.exceptions.contact_add_error import ContactAddError
+from modules.contact.exceptions.contact_delete_error import ContactDeleteError
 from modules.contact.exceptions.contact_parser_error import ContactParserError
 from modules.contact.exceptions.contact_search_error import ContactSearchError
 from modules.contact.exceptions.contact_update_error import ContactUpdateError
@@ -115,6 +116,57 @@ class ContactManagerTest(unittest.TestCase):
         with self.assertRaises(ContactUpdateError):
             self.contact_manager.update(contact)
             self.fail("Did not fail")
+
+    def test_delete_deletes_contact(self):
+        self.postgres_conn_manager.query = MagicMock(return_value=Result(True))
+        try:
+            self.contact_manager.delete(1)
+        except Exception as e:
+            self.fail(str(e))
+
+    def test_delete_fails_on_delete_error(self):
+        self.postgres_conn_manager.query = MagicMock(return_value=Result(False))
+        with self.assertRaises(ContactDeleteError):
+            self.contact_manager.delete(1)
+            self.fail("Did not fail")
+        self.postgres_conn_manager.query.assert_called_once()
+
+    def test_get_by_entity_id_gets_contacts(self):
+        entity_id = 2
+        contacts = [
+            {
+                "id": 1,
+                "entity_id": entity_id,
+                "type_id": self.type_email.get_id(),
+                "info": "example@website.com",
+                "description": "Some description"
+            },
+            {
+                "id": 2,
+                "entity_id": entity_id,
+                "type_id": self.type_phone.get_id(),
+                "info": "+19998887777",
+                "description": "Some description"
+            }
+        ]
+        self.postgres_conn_manager.select = MagicMock(return_value=Result(True, "", contacts))
+        contact_objs = self.contact_manager.get_by_entity_id(entity_id)
+        self.assertEqual(len(contacts), len(contact_objs))
+        for i in range(0, len(contacts)):
+            contact_dict_item = contacts[i]
+            contact_obj_item: Contact = contact_objs[i]
+            self.assertEqual(contact_dict_item["id"], contact_obj_item.get_id())
+            self.assertTrue(entity_id == contact_obj_item.get_entity_id() and entity_id == contact_dict_item["entity_id"])
+            self.assertEqual(contact_dict_item["type_id"], contact_obj_item.get_type().get_id())
+            self.assertEqual(contact_dict_item["info"], contact_obj_item.get_info())
+            self.assertEqual(contact_dict_item["description"], contact_obj_item.get_description())
+
+    def test_get_by_entity_id_fails_on_search_error(self):
+        self.postgres_conn_manager.select = MagicMock(return_value=Result(False))
+        with self.assertRaises(ContactSearchError):
+            self.contact_manager.get_by_entity_id(2)
+            self.fail("Did not fail")
+        self.postgres_conn_manager.select.assert_called_once()
 
     def __check_add(self, type_id, info: str):
         contact_id = 1

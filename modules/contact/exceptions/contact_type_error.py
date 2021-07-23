@@ -1,0 +1,2 @@
+class ContactTypeError(Exception):
+    pass

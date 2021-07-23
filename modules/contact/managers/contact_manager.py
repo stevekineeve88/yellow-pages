@@ -1,6 +1,7 @@
 from singleton_decorator import singleton
 from modules.contact.data.contact_data import ContactData
 from modules.contact.exceptions.contact_add_error import ContactAddError
+from modules.contact.exceptions.contact_delete_error import ContactDeleteError
 from modules.contact.exceptions.contact_search_error import ContactSearchError
 from modules.contact.exceptions.contact_update_error import ContactUpdateError
 from modules.contact.managers.type_manager import TypeManager
@@ -44,7 +45,9 @@ class ContactManager:
             raise ContactUpdateError("Could not update contact info")
 
     def delete(self, contact_id):
-        pass
+        result = self.__contact_data.delete(contact_id)
+        if not result.get_status():
+            raise ContactDeleteError("Could not delete contact")
 
     def get(self, contact_id) -> Contact:
         result = self.__contact_data.load(contact_id)
@@ -53,7 +56,14 @@ class ContactManager:
         return self.__build_contact_object(result.get_data()[0])
 
     def get_by_entity_id(self, entity_id) -> list:
-        pass
+        result = self.__contact_data.load_by_entity_id(entity_id)
+        if not result.get_status():
+            raise ContactSearchError("Could not find contacts for entity")
+        data = result.get_data()
+        contacts = []
+        for datum in data:
+            contacts.append(self.__build_contact_object(datum))
+        return contacts
 
     def __build_contact_object(self, data: dict) -> Contact:
         return Contact(

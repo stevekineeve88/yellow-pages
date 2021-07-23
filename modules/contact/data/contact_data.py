@@ -28,3 +28,11 @@ class ContactData:
             kwargs.get("description"),
             contact_id
         ))
+
+    def delete(self, contact_id) -> Result:
+        return self.__postgres_conn_manager.query(f"""
+        """, (contact_id,))
+
+    def load_by_entity_id(self, entity_id) -> Result:
+        return self.__postgres_conn_manager.select(f"""
+        """, (entity_id,))

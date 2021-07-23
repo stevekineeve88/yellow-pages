@@ -1,0 +1,2 @@
+class EntityStatusError(Exception):
+    pass
