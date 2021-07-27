@@ -1,0 +1,18 @@
+FROM python:3.7-alpine
+RUN apk update && apk add python3-dev \
+    gcc \
+    libc-dev \
+    libffi-dev \
+    openssl-dev
+WORKDIR /code
+ENV FLASK_APP=index.py
+ENV FLASK_RUN_HOST=0.0.0.0
+ENV FLASK_ENVIRONMENT=development
+ENV FLASK_DEBUG=1
+COPY ./requirements.txt requirements.txt
+RUN \
+ apk add --no-cache postgresql-libs && \
+ apk add --no-cache --virtual .build-deps gcc musl-dev postgresql-dev && \
+ python3 -m pip install -r requirements.txt --no-cache-dir && \
+ apk --purge del .build-deps
+EXPOSE 5000

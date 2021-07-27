@@ -1,4 +1,4 @@
-from modules.entity.objects.status import Status
+from modules.entity.objects.entity_status import EntityStatus
 from modules.util.objects.location import Location
 
 
@@ -18,7 +18,7 @@ class Entity:
         self.__id = kwargs.get("id")
         self.__uuid: str = kwargs.get("uuid")
         self.__name: str = kwargs.get("name")
-        self.__status: Status = kwargs.get("status")
+        self.__status: EntityStatus = kwargs.get("status")
         self.__location: Location = kwargs.get("location")
 
     def get_id(self):
@@ -49,7 +49,7 @@ class Entity:
         """
         self.__name = name
 
-    def get_status(self) -> Status:
+    def get_status(self) -> EntityStatus:
         """ Get status
         Returns:
             Status

@@ -1,11 +1,11 @@
 from modules.util.objects.dict_object import DictObject
 
 
-class Type(DictObject):
+class ContactType(DictObject):
     """ Object representing type properties
     """
     def __init__(self, type_id, const: str, description: str):
-        """ Constructor for Type
+        """ Constructor for ContactType
         Args:
             type_id (ID):       Type ID
             const (str):        Constant representing type

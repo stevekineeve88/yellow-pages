@@ -4,19 +4,19 @@ from modules.util.objects.result import Result
 
 
 @singleton
-class StatusData:
-    """ Data class for status database operations
+class ContactTypeData:
+    """ Data class for type database operations
     """
     def __init__(self, **kwargs):
-        """ Constructor for StatusData
+        """ Constructor for ContactTypeData
         Args:
-            **kwargs:  Optional dependencies
+            **kwargs:   Optional dependencies
                 postgres_conn_manager (PostgresConnManager)
         """
         self.__postgres_conn_manager: PostgresConnManager = kwargs.get("postgres_conn_manager") or PostgresConnManager()
 
     def load_all(self) -> Result:
-        """ Load all statuses
+        """ Load all types
         Returns:
             Result
         """
@@ -25,5 +25,5 @@ class StatusData:
                 id,
                 const,
                 description
-            FROM entity.statuses
+            FROM contact.types
         """)

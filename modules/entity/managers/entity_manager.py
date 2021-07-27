@@ -3,7 +3,7 @@ from modules.entity.data.entity_data import EntityData
 from modules.entity.exceptions.entity_creation_error import EntityCreationError
 from modules.entity.exceptions.entity_search_error import EntitySearchError
 from modules.entity.exceptions.entity_update_error import EntityUpdateError
-from modules.entity.managers.status_manager import StatusManager
+from modules.entity.managers.entity_status_manager import EntityStatusManager
 from modules.entity.objects.entity import Entity
 from modules.util.exceptions.geo_locator_error import GeoLocatorError
 from modules.util.managers.geo_locator_manager import GeoLocatorManager
@@ -21,11 +21,11 @@ class EntityManager:
             **kwargs:   Optional Dependencies
                 entity_data (EntityData)
                 geo_locator_manager (GeoLocatorManager)
-                status_manager (StatusManager)
+                entity_status_manager (EntityStatusManager)
         """
         self.__entity_data: EntityData = kwargs.get("entity_data") or EntityData()
         self.__geo_locator_manager: GeoLocatorManager = kwargs.get("geo_locator_manager") or GeoLocatorManager()
-        status_manager: StatusManager = kwargs.get("status_manager") or StatusManager()
+        status_manager: EntityStatusManager = kwargs.get("entity_status_manager") or EntityStatusManager()
         self.__statuses: DataList = status_manager.get_all()
 
     def create(self, **kwargs) -> Entity:
@@ -65,6 +65,19 @@ class EntityManager:
         data = result.get_data()
         if len(data) == 0:
             raise EntitySearchError(f"Entity id {entity_id} not found")
+        return self.__build_entity_object(data[0])
+
+    def get_by_uuid(self, uuid: str) -> Entity:
+        """ Get entity by UUID
+        Args:
+            uuid (str):     Entity UUID
+        Returns:
+            Entity
+        """
+        result = self.__entity_data.load_by_uuid(uuid)
+        data = result.get_data()
+        if len(data) == 0:
+            raise EntitySearchError(f"Entity uuid {uuid} not found")
         return self.__build_entity_object(data[0])
 
     def update(self, entity: Entity):

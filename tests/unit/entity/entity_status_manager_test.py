@@ -1,19 +1,19 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from modules.entity.data.status_data import StatusData
+from modules.entity.data.entity_status_data import EntityStatusData
 from modules.entity.exceptions.entity_status_error import EntityStatusError
-from modules.entity.managers.status_manager import StatusManager
+from modules.entity.managers.entity_status_manager import EntityStatusManager
 from modules.util.managers.postgres_conn_manager import PostgresConnManager
 from modules.util.objects.result import Result
 
 
-class StatusManagerTest(unittest.TestCase):
+class EntityStatusManagerTest(unittest.TestCase):
     @classmethod
     @patch("modules.util.managers.postgres_conn_manager.PostgresConnManager")
     def setUpClass(cls, postgres_conn_manager) -> None:
         cls.postgres_conn_manager: PostgresConnManager = postgres_conn_manager
-        cls.status_manager: StatusManager = StatusManager(
-            status_data=StatusData(
+        cls.status_manager: EntityStatusManager = EntityStatusManager(
+            entity_status_data=EntityStatusData(
                 postgres_conn_manager=cls.postgres_conn_manager
             )
         )

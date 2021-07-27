@@ -1,21 +1,21 @@
 from singleton_decorator import singleton
-from modules.contact.data.type_data import TypeData
+from modules.contact.data.contact_type_data import ContactTypeData
 from modules.contact.exceptions.contact_type_error import ContactTypeError
-from modules.contact.objects.type import Type
+from modules.contact.objects.contact_type import ContactType
 from modules.util.objects.data_list import DataList
 
 
 @singleton
-class TypeManager:
+class ContactTypeManager:
     """ Manager class for type CRUD operations
     """
     def __init__(self, **kwargs):
-        """ Constructor for TypeManager
+        """ Constructor for ContactTypeManager
         Args:
             **kwargs:   Optional dependencies
-                type_data (TypeData)
+                contact_type_data (ContactTypeData)
         """
-        self.__type_data: TypeData = kwargs.get("type_data") or TypeData()
+        self.__type_data: ContactTypeData = kwargs.get("contact_type_data") or ContactTypeData()
 
     def get_all(self) -> DataList:
         """ Get all types
@@ -28,5 +28,5 @@ class TypeManager:
         data = result.get_data()
         types = []
         for datum in data:
-            types.append(Type(datum["id"], datum["const"], datum["description"]))
+            types.append(ContactType(datum["id"], datum["const"], datum["description"]))
         return DataList("CONTACT_TYPES", types, "id", "const")

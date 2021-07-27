@@ -1,21 +1,21 @@
 from singleton_decorator import singleton
-from modules.tag.data.type_data import TypeData
+from modules.tag.data.tag_type_data import TagTypeData
 from modules.tag.exceptions.tag_type_error import TagTypeError
-from modules.tag.objects.type import Type
+from modules.tag.objects.tag_type import TagType
 from modules.util.objects.data_list import DataList
 
 
 @singleton
-class TypeManager:
+class TagTypeManager:
     """ Manager class for tag type CRUD operations
     """
     def __init__(self, **kwargs):
-        """ Constructor for TypeManager
+        """ Constructor for TagTypeManager
         Args:
             **kwargs:   Optional dependencies
-                type_data (TypeData)
+                tag_type_data (TagTypeData)
         """
-        self.__type_data: TypeData = kwargs.get("type_data") or TypeData()
+        self.__type_data: TagTypeData = kwargs.get("tag_type_data") or TagTypeData()
 
     def get_all(self) -> DataList:
         """ Get all
@@ -28,5 +28,5 @@ class TypeManager:
         data = result.get_data()
         types = []
         for datum in data:
-            types.append(Type(datum["id"], datum["const"], datum["description"]))
+            types.append(TagType(datum["id"], datum["const"], datum["description"]))
         return DataList("TAG_TYPES", types, "id", "const")

@@ -3,7 +3,7 @@ from modules.tag.data.tag_data import TagData
 from modules.tag.exceptions.tag_add_error import TagAddError
 from modules.tag.exceptions.tag_delete_error import TagDeleteError
 from modules.tag.exceptions.tag_search_error import TagSearchError
-from modules.tag.managers.type_manager import TypeManager
+from modules.tag.managers.tag_type_manager import TagTypeManager
 from modules.tag.objects.tag import Tag
 from modules.util.objects.data_list import DataList
 
@@ -17,10 +17,10 @@ class TagManager:
         Args:
             **kwargs:   Optional dependencies
                 tag_data (TagData)
-                type_manager (TypeManager)
+                tag_type_manager (TagTypeManager)
         """
         self.__tag_data: TagData = kwargs.get("tag_data") or TagData()
-        type_manager: TypeManager = kwargs.get("type_manager") or TypeManager()
+        type_manager: TagTypeManager = kwargs.get("tag_type_manager") or TagTypeManager()
         self.__types: DataList = type_manager.get_all()
 
     def add(self, entity_id, type_id) -> Tag:

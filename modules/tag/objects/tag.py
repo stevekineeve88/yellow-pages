@@ -1,4 +1,4 @@
-from modules.tag.objects.type import Type
+from modules.tag.objects.tag_type import TagType
 
 
 class Tag:
@@ -9,11 +9,11 @@ class Tag:
         Args:
             tag_id (ID):        Tag ID
             entity_id (ID):     Entity ID
-            tag_type (Type):    Tag type
+            tag_type (TagType):    Tag type
         """
         self.__id = tag_id
         self.__entity_id = entity_id
-        self.__type: Type = tag_type
+        self.__type: TagType = tag_type
 
     def get_id(self):
         """ Get ID
@@ -29,7 +29,7 @@ class Tag:
         """
         return self.__entity_id
 
-    def get_type(self) -> Type:
+    def get_type(self) -> TagType:
         """ Get type
         Returns:
             Type

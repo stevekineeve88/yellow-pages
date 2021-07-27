@@ -1,7 +1,7 @@
 from modules.util.objects.dict_object import DictObject
 
 
-class Type(DictObject):
+class TagType(DictObject):
     def __init__(self, type_id, const: str, description: str):
         self.__id = type_id
         self.__const: str = const

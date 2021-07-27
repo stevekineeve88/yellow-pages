@@ -5,9 +5,9 @@ from modules.entity.exceptions.entity_creation_error import EntityCreationError
 from modules.entity.exceptions.entity_search_error import EntitySearchError
 from modules.entity.exceptions.entity_update_error import EntityUpdateError
 from modules.entity.managers.entity_manager import EntityManager
-from modules.entity.managers.status_manager import StatusManager
+from modules.entity.managers.entity_status_manager import EntityStatusManager
 from modules.entity.objects.entity import Entity
-from modules.entity.objects.status import Status
+from modules.entity.objects.entity_status import EntityStatus
 from modules.util.exceptions.data_list_item_exception import DataListItemException
 from modules.util.exceptions.geo_locator_error import GeoLocatorError
 from modules.util.managers.geo_locator_manager import GeoLocatorManager
@@ -21,14 +21,14 @@ class EntityManagerTest(unittest.TestCase):
     @classmethod
     @patch("modules.util.managers.postgres_conn_manager.PostgresConnManager")
     @patch("modules.util.managers.geo_locator_manager.GeoLocatorManager")
-    @patch("modules.entity.managers.status_manager.StatusManager")
+    @patch("modules.entity.managers.entity_status_manager.EntityStatusManager")
     def setUpClass(cls, postgres_conn_manager, geo_locator_manager, status_manager) -> None:
         cls.postgres_conn_manager: PostgresConnManager = postgres_conn_manager
         cls.geo_locator_manager: GeoLocatorManager = geo_locator_manager
-        cls.status_manager: StatusManager = status_manager
+        cls.status_manager: EntityStatusManager = status_manager
 
-        cls.status_active = Status(1, "ACTIVE", "Active Status")
-        cls.status_deleted = Status(2, "DELETED", "Deleted Status")
+        cls.status_active = EntityStatus(1, "ACTIVE", "Active Status")
+        cls.status_deleted = EntityStatus(2, "DELETED", "Deleted Status")
         cls.status_manager.get_all = MagicMock(return_value=DataList(
             "STATUSES",
             [cls.status_active, cls.status_deleted],
@@ -41,7 +41,7 @@ class EntityManagerTest(unittest.TestCase):
                 postgres_conn_manager=cls.postgres_conn_manager
             ),
             geo_locator_manager=cls.geo_locator_manager,
-            status_manager=cls.status_manager
+            entity_status_manager=cls.status_manager
         )
 
     def test_create_returns_entity(self):
@@ -121,6 +121,29 @@ class EntityManagerTest(unittest.TestCase):
         with self.assertRaises(EntitySearchError):
             self.entity_manager.get(1)
             self.fail("Did not fail")
+
+    def test_get_by_uuid_gets_entity(self):
+        uuid = "ERT-213"
+        data = {
+            "id": 1,
+            "uuid": uuid,
+            "name": "Some Name",
+            "status_id": self.status_active.get_id(),
+            "latitude": 123.123,
+            "longitude": 345.345,
+            "address": "Some address"
+        }
+        self.postgres_conn_manager.select = MagicMock(return_value=Result(True, "", [data]))
+        entity = self.entity_manager.get_by_uuid(uuid)
+        self.postgres_conn_manager.select.assert_called_once()
+        self.assertEqual(uuid, entity.get_uuid())
+
+    def test_get_by_uuid_fails_on_search_error(self):
+        self.postgres_conn_manager.select = MagicMock(return_value=Result(False))
+        with self.assertRaises(EntitySearchError):
+            self.entity_manager.get_by_uuid("ERT-123")
+            self.fail("Did not fail")
+        self.postgres_conn_manager.select.assert_called_once()
 
     def test_update_updates_entity(self):
         entity = Entity(
