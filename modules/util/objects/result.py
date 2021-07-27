@@ -12,6 +12,7 @@ class Result:
         self.__message: str = message
         self.__data: list = [] if data is None else data
         self.__insert_id = None
+        self.__full_count: int = 0
 
     def get_status(self) -> bool:
         """ Get status
@@ -47,3 +48,17 @@ class Result:
             ID
         """
         return self.__insert_id
+
+    def set_full_count(self, full_count: int):
+        """ Set full count of result without offset or limit
+        Args:
+            full_count (int):
+        """
+        self.__full_count = full_count
+
+    def get_full_count(self) -> int:
+        """ Get full count
+        Returns:
+            int
+        """
+        return self.__full_count

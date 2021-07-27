@@ -1,9 +1,9 @@
 from modules.contact.exceptions.contact_add_error import ContactAddError
 from modules.contact.exceptions.contact_search_error import ContactSearchError
 from modules.contact.managers.contact_manager import ContactManager
-from modules.contact.managers.type_manager import TypeManager
+from modules.contact.managers.contact_type_manager import ContactTypeManager
 from modules.contact.objects.contact import Contact
-from modules.contact.objects.type import Type
+from modules.contact.objects.contact_type import ContactType
 from modules.entity.managers.entity_manager import EntityManager
 from modules.entity.objects.entity import Entity
 from modules.util.managers.postgres_conn_manager import PostgresConnManager
@@ -17,8 +17,8 @@ class ContactManagerTest(IntegrationSetup):
         super().setUpClass()
         cls.entity_manager: EntityManager = EntityManager()
         cls.contact_manager: ContactManager = ContactManager()
-        cls.type_manager: TypeManager = TypeManager()
-        cls.types: DataList = cls.type_manager.get_all()
+        cls.contact_type_manager: ContactTypeManager = ContactTypeManager()
+        cls.types: DataList = cls.contact_type_manager.get_all()
 
     def test_add_adds_phone_contact_to_entity(self):
         entity = self.entity_manager.create(
@@ -128,11 +128,11 @@ class ContactManagerTest(IntegrationSetup):
             contact_3.get_id(): contact_3
         })
 
-    def __check_add(self, entity: Entity, contact_type: Type, info: str, description: str):
+    def __check_add(self, entity: Entity, contact_type: ContactType, info: str, description: str):
         """ Check add successful
         Args:
             entity (Entity):
-            contact_type (Type):
+            contact_type (ContactType):
             info (str):
             description (str):
         """

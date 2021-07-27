@@ -7,9 +7,9 @@ from modules.contact.exceptions.contact_parser_error import ContactParserError
 from modules.contact.exceptions.contact_search_error import ContactSearchError
 from modules.contact.exceptions.contact_update_error import ContactUpdateError
 from modules.contact.managers.contact_manager import ContactManager
-from modules.contact.managers.type_manager import TypeManager
+from modules.contact.managers.contact_type_manager import ContactTypeManager
 from modules.contact.objects.contact import Contact
-from modules.contact.objects.type import Type
+from modules.contact.objects.contact_type import ContactType
 from modules.util.managers.postgres_conn_manager import PostgresConnManager
 from modules.util.objects.data_list import DataList
 from modules.util.objects.result import Result
@@ -18,25 +18,26 @@ from modules.util.objects.result import Result
 class ContactManagerTest(unittest.TestCase):
     @classmethod
     @patch("modules.util.managers.postgres_conn_manager.PostgresConnManager")
-    @patch("modules.contact.managers.type_manager.TypeManager")
-    def setUpClass(cls, postgres_conn_manager, type_manager) -> None:
+    @patch("modules.contact.managers.contact_type_manager.ContactTypeManager")
+    def setUpClass(cls, postgres_conn_manager, contact_type_manager) -> None:
         cls.postgres_conn_manager: PostgresConnManager = postgres_conn_manager
-        cls.type_manager: TypeManager = type_manager
+        cls.contact_type_manager: ContactTypeManager = contact_type_manager
 
-        cls.type_phone = Type(1, "PHONE", "Phone")
-        cls.type_email = Type(2, "EMAIL", "Email")
-        cls.type_website = Type(3, "WEBSITE", "Website")
-        cls.type_manager.get_all = MagicMock(return_value=DataList(
+        cls.type_phone = ContactType(1, "PHONE", "Phone")
+        cls.type_email = ContactType(2, "EMAIL", "Email")
+        cls.type_website = ContactType(3, "WEBSITE", "Website")
+        cls.contact_type_manager.get_all = MagicMock(return_value=DataList(
             "TYPES",
             [cls.type_phone, cls.type_email, cls.type_website],
             "id",
             "const"
         ))
+
         cls.contact_manager: ContactManager = ContactManager(
             contact_data=ContactData(
                 postgres_conn_manager=cls.postgres_conn_manager
             ),
-            type_manager=cls.type_manager
+            contact_type_manager=cls.contact_type_manager
         )
 
     def test_add_phone_returns_contact(self):

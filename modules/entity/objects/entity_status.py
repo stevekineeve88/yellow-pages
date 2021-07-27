@@ -1,11 +1,11 @@
 from modules.util.objects.dict_object import DictObject
 
 
-class Status(DictObject):
+class EntityStatus(DictObject):
     """ Object for status properties
     """
     def __init__(self, status_id, const: str, description: str):
-        """ Constructor for Status
+        """ Constructor for EntityStatus
         Args:
             status_id (ID):         Status ID
             const (str):            Constant representing object

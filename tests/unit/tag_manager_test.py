@@ -5,9 +5,9 @@ from modules.tag.exceptions.tag_add_error import TagAddError
 from modules.tag.exceptions.tag_delete_error import TagDeleteError
 from modules.tag.exceptions.tag_search_error import TagSearchError
 from modules.tag.managers.tag_manager import TagManager
-from modules.tag.managers.type_manager import TypeManager
+from modules.tag.managers.tag_type_manager import TagTypeManager
 from modules.tag.objects.tag import Tag
-from modules.tag.objects.type import Type
+from modules.tag.objects.tag_type import TagType
 from modules.util.managers.postgres_conn_manager import PostgresConnManager
 from modules.util.objects.data_list import DataList
 from modules.util.objects.result import Result
@@ -16,12 +16,12 @@ from modules.util.objects.result import Result
 class TagManagerTest(unittest.TestCase):
     @classmethod
     @patch("modules.util.managers.postgres_conn_manager.PostgresConnManager")
-    @patch("modules.tag.managers.type_manager.TypeManager")
+    @patch("modules.tag.managers.tag_type_manager.TagTypeManager")
     def setUpClass(cls, postgres_conn_manager, type_manager) -> None:
         cls.postgres_conn_manager: PostgresConnManager = postgres_conn_manager
-        cls.type_manager: TypeManager = type_manager
+        cls.type_manager: TagTypeManager = type_manager
 
-        cls.type_restaurant = Type(1, "RESTAURANT", "Restaurant")
+        cls.type_restaurant = TagType(1, "RESTAURANT", "Restaurant")
         cls.type_manager.get_all = MagicMock(return_value=DataList(
             "TYPES",
             [cls.type_restaurant],
@@ -32,7 +32,7 @@ class TagManagerTest(unittest.TestCase):
             tag_data=TagData(
                 postgres_conn_manager=cls.postgres_conn_manager
             ),
-            type_manager=cls.type_manager
+            tag_type_manager=cls.type_manager
         )
 
     def test_add_adds_tag_successfully(self):

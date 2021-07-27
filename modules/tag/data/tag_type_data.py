@@ -4,11 +4,11 @@ from modules.util.objects.result import Result
 
 
 @singleton
-class TypeData:
+class TagTypeData:
     """ Data class for tag type database operations
     """
     def __init__(self, **kwargs):
-        """ Constructor for TypeData
+        """ Constructor for TagTypeData
         Args:
             **kwargs:       Optional dependencies
                 postgres_conn_manager (PostgresConnManager)

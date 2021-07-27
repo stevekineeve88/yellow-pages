@@ -3,7 +3,7 @@ from modules.entity.objects.entity import Entity
 from modules.tag.exceptions.tag_add_error import TagAddError
 from modules.tag.exceptions.tag_search_error import TagSearchError
 from modules.tag.managers.tag_manager import TagManager
-from modules.tag.managers.type_manager import TypeManager
+from modules.tag.managers.tag_type_manager import TagTypeManager
 from modules.tag.objects.tag import Tag
 from modules.util.managers.postgres_conn_manager import PostgresConnManager
 from modules.util.objects.data_list import DataList
@@ -16,8 +16,8 @@ class TagManagerTest(IntegrationSetup):
         super().setUpClass()
         cls.entity_manager: EntityManager = EntityManager()
         cls.tag_manager: TagManager = TagManager()
-        cls.type_manager: TypeManager = TypeManager()
-        cls.types: DataList = cls.type_manager.get_all()
+        cls.tag_type_manager: TagTypeManager = TagTypeManager()
+        cls.types: DataList = cls.tag_type_manager.get_all()
 
     def test_add_adds_successfully(self):
         entity = self.entity_manager.create(

@@ -45,3 +45,6 @@ class DataList:
         if item_id not in self.__data:
             raise DataListItemException(f"{item_id} not in {self.__name} data list")
         return self.__data[item_id]
+
+    def get_all(self) -> dict:
+        return self.__data

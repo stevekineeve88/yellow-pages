@@ -59,6 +59,26 @@ class EntityData:
             WHERE id = %s
         """, (entity_id,))
 
+    def load_by_uuid(self, uuid: str) -> Result:
+        """ Load entity by UUID
+        Args:
+            uuid (str):
+        Returns:
+            Result
+        """
+        return self.__postgres_conn_manager.select(f"""
+            SELECT
+                id,
+                uuid,
+                name,
+                latitude,
+                longitude,
+                address,
+                status_id
+            FROM entity.entities
+            WHERE uuid = %s
+        """, (uuid,))
+
     def update(self, entity_id, name: str) -> Result:
         """ Update entity
         Args:
@@ -124,12 +144,20 @@ class EntityData:
                 name (str)
                 address (str)
                 statuses (list)
+                tags (list)
+                limit (int)
+                offset (int)
         Returns:
             Result
         """
         name = kwargs.get("name") or ""
         address = kwargs.get("address") or ""
         statuses = kwargs.get("statuses") or []
+        tags = kwargs.get("tags") or []
+        limit = kwargs.get("limit") or 100
+        offset = kwargs.get("offset") or 0
+        limit = limit if limit <= 100 else 100
+        offset = offset if offset >= 0 else 0
         params = (
             f"%{name}%",
             f"%{address}%"
@@ -137,26 +165,38 @@ class EntityData:
 
         query_parts = []
         for status_id in statuses:
-            query_parts.append(f"status_id = %s")
+            query_parts.append(f"e.status_id = %s")
             params += (status_id,)
         status_query_string = f"AND ({' OR '.join(query_parts)})" if len(query_parts) != 0 else ""
 
+        query_parts = []
+        for tag_id in tags:
+            query_parts.append(f"t.type_id = %s")
+            params += (tag_id,)
+        tag_query_string = f"AND ({' OR '.join(query_parts)})" if len(query_parts) != 0 else ""
+
+        params += (limit, offset)
+
         return self.__postgres_conn_manager.select(f"""
             SELECT
-                id,
-                uuid,
-                name,
-                latitude,
-                longitude,
-                address,
-                status_id
-            FROM entity.entities
-            WHERE (
-                name LIKE %s
-                AND address LIKE %s
-            )
+                e.id,
+                e.uuid,
+                e.name,
+                e.latitude,
+                e.longitude,
+                e.address,
+                e.status_id,
+                count(*) OVER() AS full_count
+            FROM tag.tags AS t
+            RIGHT JOIN entity.entities AS e
+            ON t.entity_id = e.id
+            WHERE e.name LIKE %s
+            AND e.address LIKE %s
             {status_query_string}
-            ORDER BY name ASC
+            {tag_query_string}
+            GROUP BY e.id
+            ORDER BY e.name ASC
+            LIMIT %s OFFSET %s
         """, params)
 
     def search_nearby(self, latitude: float, longitude: float, miles: int, **kwargs) -> Result:
@@ -169,43 +209,64 @@ class EntityData:
                 name (str)
                 address (str)
                 statuses (list)
+                tags (list)
+                limit (int)
+                offset (int)
         Returns:
             Result
         """
         name = kwargs.get("name") or ""
         address = kwargs.get("address") or ""
         statuses = kwargs.get("statuses") or []
+        tags = kwargs.get("tags") or []
+        limit = kwargs.get("limit") or 100
+        offset = kwargs.get("offset") or 0
+        limit = limit if limit <= 100 else 100
+        offset = offset if offset >= 0 else 0
         params = (
             longitude,
             latitude,
             f"%{name}%",
             f"%{address}%",
+            longitude,
+            latitude,
             miles
         )
 
         query_parts = []
         for status_id in statuses:
-            query_parts.append(f"status_id = %s")
+            query_parts.append(f"e.status_id = %s")
             params += (status_id,)
         status_query_string = f"AND ({' OR '.join(query_parts)})" if len(query_parts) != 0 else ""
 
+        query_parts = []
+        for tag_id in tags:
+            query_parts.append(f"t.type_id = %s")
+            params += (tag_id,)
+        tag_query_string = f"AND ({' OR '.join(query_parts)})" if len(query_parts) != 0 else ""
+
+        params += (limit, offset)
+
         return self.__postgres_conn_manager.select(f"""
             SELECT
-                entities.id,
-                entities.uuid,
-                entities.name,
-                entities.latitude,
-                entities.longitude,
-                entities.address,
-                entities.status_id,
-                entities.distance
-            FROM (
-                SELECT *, (point(%s, %s) <@> point(longitude, latitude)) AS distance
-                FROM entity.entities
-            ) AS entities    
-            WHERE name LIKE %s
-            AND address LIKE %s
-            AND distance < %s
+                e.id,
+                e.uuid,
+                e.name,
+                e.latitude,
+                e.longitude,
+                e.address,
+                e.status_id,
+                (point(%s, %s) <@> point(longitude, latitude)) AS distance,
+                count(*) OVER() AS full_count
+            FROM tag.tags AS t
+            RIGHT JOIN entity.entities AS e
+                ON t.entity_id = e.id
+            WHERE e.name LIKE %s
+            AND e.address LIKE %s
+            AND (point(%s, %s) <@> point(longitude, latitude)) < %s
             {status_query_string}
+            {tag_query_string}
+            GROUP BY e.id
             ORDER BY distance ASC
+            LIMIT %s OFFSET %s
         """, params)

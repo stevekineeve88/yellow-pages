@@ -1,19 +1,19 @@
-from modules.entity.data.status_data import StatusData
+from modules.entity.data.entity_status_data import EntityStatusData
 from modules.entity.exceptions.entity_status_error import EntityStatusError
-from modules.entity.objects.status import Status
+from modules.entity.objects.entity_status import EntityStatus
 from modules.util.objects.data_list import DataList
 
 
-class StatusManager:
+class EntityStatusManager:
     """ Manager class for status CRUD operations
     """
     def __init__(self, **kwargs):
-        """ Constructor for StatusManager
+        """ Constructor for EntityStatusManager
         Args:
             **kwargs:   Optional Dependencies
-                status_data (StatusData)
+                entity_status_data (EntityStatusData)
         """
-        self.__status_data: StatusData = kwargs.get("status_data") or StatusData()
+        self.__status_data: EntityStatusData = kwargs.get("entity_status_data") or EntityStatusData()
 
     def get_all(self) -> DataList:
         """ Get all statuses
@@ -26,5 +26,5 @@ class StatusManager:
         data = result.get_data()
         statuses = []
         for datum in data:
-            statuses.append(Status(datum["id"], datum["const"], datum["description"]))
+            statuses.append(EntityStatus(datum["id"], datum["const"], datum["description"]))
         return DataList("ENTITY_STATUSES", statuses, "id", "const")

@@ -4,7 +4,7 @@ from modules.contact.exceptions.contact_add_error import ContactAddError
 from modules.contact.exceptions.contact_delete_error import ContactDeleteError
 from modules.contact.exceptions.contact_search_error import ContactSearchError
 from modules.contact.exceptions.contact_update_error import ContactUpdateError
-from modules.contact.managers.type_manager import TypeManager
+from modules.contact.managers.contact_type_manager import ContactTypeManager
 from modules.contact.objects.contact import Contact
 from modules.contact.objects.contact_parser import ContactParser
 from modules.contact.objects.parsers.email_parser import EmailParser
@@ -22,10 +22,10 @@ class ContactManager:
         Args:
             **kwargs:   Optional dependencies
                 contact_data (ContactData)
-                type_manager (TypeManager)
+                contact_type_manager (ContactTypeManager)
         """
         self.__contact_data: ContactData = kwargs.get("contact_data") or ContactData()
-        type_manager: TypeManager = kwargs.get("type_manager") or TypeManager()
+        type_manager: ContactTypeManager = kwargs.get("contact_type_manager") or ContactTypeManager()
         self.__types: DataList = type_manager.get_all()
 
     def add(self, entity_id, **kwargs) -> Contact:

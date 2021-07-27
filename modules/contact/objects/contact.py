@@ -1,4 +1,4 @@
-from modules.contact.objects.type import Type
+from modules.contact.objects.contact_type import ContactType
 
 
 class Contact:
@@ -16,7 +16,7 @@ class Contact:
         """
         self.__id = kwargs.get("id")
         self.__entity_id = kwargs.get("entity_id")
-        self.__type: Type = kwargs.get("type")
+        self.__type: ContactType = kwargs.get("type")
         self.__info: str = kwargs.get("info")
         self.__description: str = kwargs.get("description")
 
@@ -34,7 +34,7 @@ class Contact:
         """
         return self.__entity_id
 
-    def get_type(self) -> Type:
+    def get_type(self) -> ContactType:
         """ Get type
         Returns:
             Type

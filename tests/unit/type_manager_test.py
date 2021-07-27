@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from modules.tag.data.type_data import TypeData
+from modules.tag.data.tag_type_data import TagTypeData
 from modules.tag.exceptions.tag_type_error import TagTypeError
-from modules.tag.managers.type_manager import TypeManager
+from modules.tag.managers.tag_type_manager import TagTypeManager
 from modules.util.managers.postgres_conn_manager import PostgresConnManager
 from modules.util.objects.result import Result
 
@@ -12,8 +12,8 @@ class TypeManagerTest(unittest.TestCase):
     @patch("modules.util.managers.postgres_conn_manager.PostgresConnManager")
     def setUpClass(cls, postgres_conn_manager) -> None:
         cls.postgres_conn_manager: PostgresConnManager = postgres_conn_manager
-        cls.type_manager: TypeManager = TypeManager(
-            type_data=TypeData(
+        cls.type_manager: TagTypeManager = TagTypeManager(
+            tag_type_data=TagTypeData(
                 postgres_conn_manager=cls.postgres_conn_manager
             )
         )
