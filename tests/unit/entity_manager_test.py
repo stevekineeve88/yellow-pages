@@ -286,17 +286,13 @@ class EntityManagerTest(unittest.TestCase):
             "longitude": 789.789,
             "address": "Some Address 2"
         }
-        self.postgres_conn_manager.select = MagicMock(return_value=Result(
-            True,
-            "",
-            [entity_1, entity_2]
-        ))
-        entities = self.entity_manager.search(
-            name="Some Address",
-            statuses=[self.status_active.get_id()],
-            address="Some Address"
-        )
+        result = Result(True, "", [entity_1, entity_2])
+        result.set_full_count(2)
+        self.postgres_conn_manager.select = MagicMock(return_value=result)
+        search_result = self.entity_manager.search()
+        entities = search_result.get_data()
         self.postgres_conn_manager.select.assert_called_once()
+        self.assertEqual(result.get_full_count(), search_result.get_full_count())
         entity_obj_1: Entity = entities[0]
         entity_obj_2: Entity = entities[1]
         self.assertEqual(entity_1["id"], entity_obj_1.get_id())
@@ -340,19 +336,17 @@ class EntityManagerTest(unittest.TestCase):
             "longitude": 789.789,
             "address": "Some Address 2"
         }
-        self.postgres_conn_manager.select = MagicMock(return_value=Result(
-            True,
-            "",
-            [entity_1, entity_2]
-        ))
-        entities = self.entity_manager.search_nearby(
+        result = Result(True, "", [entity_1, entity_2])
+        result.set_full_count(2)
+        self.postgres_conn_manager.select = MagicMock(return_value=result)
+        search_result = self.entity_manager.search_nearby(
             123.123,
             456.456,
-            10,
-            name="Some Name",
-            statuses=[self.status_active.get_id()]
+            10
         )
+        entities = search_result.get_data()
         self.postgres_conn_manager.select.assert_called_once()
+        self.assertEqual(result.get_full_count(), search_result.get_full_count())
         entity_obj_1: Entity = entities[0]
         entity_obj_2: Entity = entities[1]
         self.assertEqual(entity_1["id"], entity_obj_1.get_id())

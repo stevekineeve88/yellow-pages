@@ -144,6 +144,9 @@ class EntityData:
                 name (str)
                 address (str)
                 statuses (list)
+                tags (list)
+                limit (int)
+                offset (int)
         Returns:
             Result
         """
@@ -151,6 +154,10 @@ class EntityData:
         address = kwargs.get("address") or ""
         statuses = kwargs.get("statuses") or []
         tags = kwargs.get("tags") or []
+        limit = kwargs.get("limit") or 100
+        offset = kwargs.get("offset") or 0
+        limit = limit if limit <= 100 else 100
+        offset = offset if offset >= 0 else 0
         params = (
             f"%{name}%",
             f"%{address}%"
@@ -168,6 +175,8 @@ class EntityData:
             params += (tag_id,)
         tag_query_string = f"AND ({' OR '.join(query_parts)})" if len(query_parts) != 0 else ""
 
+        params += (limit, offset)
+
         return self.__postgres_conn_manager.select(f"""
             SELECT
                 e.id,
@@ -176,7 +185,8 @@ class EntityData:
                 e.latitude,
                 e.longitude,
                 e.address,
-                e.status_id
+                e.status_id,
+                count(*) OVER() AS full_count
             FROM tag.tags AS t
             RIGHT JOIN entity.entities AS e
             ON t.entity_id = e.id
@@ -186,6 +196,7 @@ class EntityData:
             {tag_query_string}
             GROUP BY e.id
             ORDER BY e.name ASC
+            LIMIT %s OFFSET %s
         """, params)
 
     def search_nearby(self, latitude: float, longitude: float, miles: int, **kwargs) -> Result:
@@ -198,6 +209,9 @@ class EntityData:
                 name (str)
                 address (str)
                 statuses (list)
+                tags (list)
+                limit (int)
+                offset (int)
         Returns:
             Result
         """
@@ -205,6 +219,10 @@ class EntityData:
         address = kwargs.get("address") or ""
         statuses = kwargs.get("statuses") or []
         tags = kwargs.get("tags") or []
+        limit = kwargs.get("limit") or 100
+        offset = kwargs.get("offset") or 0
+        limit = limit if limit <= 100 else 100
+        offset = offset if offset >= 0 else 0
         params = (
             longitude,
             latitude,
@@ -227,6 +245,8 @@ class EntityData:
             params += (tag_id,)
         tag_query_string = f"AND ({' OR '.join(query_parts)})" if len(query_parts) != 0 else ""
 
+        params += (limit, offset)
+
         return self.__postgres_conn_manager.select(f"""
             SELECT
                 e.id,
@@ -236,7 +256,8 @@ class EntityData:
                 e.longitude,
                 e.address,
                 e.status_id,
-                (point(%s, %s) <@> point(longitude, latitude)) AS distance
+                (point(%s, %s) <@> point(longitude, latitude)) AS distance,
+                count(*) OVER() AS full_count
             FROM tag.tags AS t
             RIGHT JOIN entity.entities AS e
                 ON t.entity_id = e.id
@@ -247,4 +268,5 @@ class EntityData:
             {tag_query_string}
             GROUP BY e.id
             ORDER BY distance ASC
+            LIMIT %s OFFSET %s
         """, params)

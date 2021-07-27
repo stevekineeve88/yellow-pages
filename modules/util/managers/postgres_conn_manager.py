@@ -73,7 +73,11 @@ class PostgresConnManager:
             else:
                 cursor.execute(sql, params)
             data = cursor.fetchall()
-            return Result(True, "", data)
+            result = Result(True, "", data)
+            if len(data) > 0:
+                item = data[0]
+                result.set_full_count(item["full_count"] if "full_count" in item else -1)
+            return result
         except Exception as e:
             self.__connection.rollback()
             return Result(False, str(e))

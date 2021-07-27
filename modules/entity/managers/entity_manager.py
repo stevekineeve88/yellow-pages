@@ -9,6 +9,7 @@ from modules.util.exceptions.geo_locator_error import GeoLocatorError
 from modules.util.managers.geo_locator_manager import GeoLocatorManager
 from modules.util.objects.data_list import DataList
 from modules.util.objects.location import Location
+from modules.util.objects.result import Result
 
 
 @singleton
@@ -125,22 +126,27 @@ class EntityManager:
             raise EntityUpdateError(f"Could not update status for entity id {entity_id}")
         return self.get(entity_id)
 
-    def search(self, **kwargs) -> list:
+    def search(self, **kwargs) -> Result:
         """ Search entities by parameters
         Args:
             **kwargs:
                 name (str)
                 address (str)
                 statuses (list)
+                tags (list)
+                limit (int)
+                offset (int)
         Returns:
-            list
+            Result
         """
-        result = self.__entity_data.search(**kwargs)
-        if not result.get_status():
+        fetch_result = self.__entity_data.search(**kwargs)
+        if not fetch_result.get_status():
             raise EntitySearchError("Failed to search for entities")
-        return self.__build_entity_objects(result.get_data())
+        result = Result(True, "", self.__build_entity_objects(fetch_result.get_data()))
+        result.set_full_count(fetch_result.get_full_count())
+        return result
 
-    def search_nearby(self, latitude: float, longitude: float, miles: int, **kwargs) -> list:
+    def search_nearby(self, latitude: float, longitude: float, miles: int, **kwargs) -> Result:
         """
         Args:
             latitude (float):       Latitude coordinate
@@ -150,13 +156,18 @@ class EntityManager:
                 name (str)
                 address (str)
                 statuses (list)
+                tags (list)
+                limit (int)
+                offset (int)
         Returns:
-            list
+            Result
         """
-        result = self.__entity_data.search_nearby(latitude, longitude, miles, **kwargs)
-        if not result.get_status():
+        fetch_result = self.__entity_data.search_nearby(latitude, longitude, miles, **kwargs)
+        if not fetch_result.get_status():
             raise EntitySearchError("Failed to search for entities")
-        return self.__build_entity_objects(result.get_data())
+        result = Result(True, "", self.__build_entity_objects(fetch_result.get_data()))
+        result.set_full_count(fetch_result.get_full_count())
+        return result
 
     def __build_entity_objects(self, data) -> list:
         """ Build entity object list

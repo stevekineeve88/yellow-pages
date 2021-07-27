@@ -1,5 +1,3 @@
-import sys
-
 from modules.entity.managers.entity_manager import EntityManager
 from modules.entity.managers.entity_status_manager import EntityStatusManager
 from modules.entity.objects.entity_status import EntityStatus
@@ -100,7 +98,88 @@ class EntityManagerTest(IntegrationSetup):
         new_entity = self.entity_manager.get(entity.get_id())
         self.assertEqual(self.status_deleted.get_id(), new_entity.get_status().get_id())
 
-    def test_search_returns_expected_search(self):
+    def test_search_returns_search_by_name(self):
+        empire_st_building = "Empire State Building New York City NY"
+        statue_of_liberty = "Statue of Liberty New York City NY"
+
+        self.entity_manager.create(
+            name="Some Name",
+            address=empire_st_building
+        )
+        self.entity_manager.create(
+            name="Some Name 2",
+            address=empire_st_building
+        )
+        self.entity_manager.create(
+            name="Some Name 3",
+            address=empire_st_building
+        )
+        self.entity_manager.create(
+            name="Other Name",
+            address=statue_of_liberty
+        )
+        search_result = self.entity_manager.search(
+            name="Some Name"
+        )
+        self.assertEqual(3, len(search_result.get_data()))
+
+    def test_search_returns_search_by_statuses(self):
+        empire_st_building = "Empire State Building New York City NY"
+        statue_of_liberty = "Statue of Liberty New York City NY"
+
+        self.entity_manager.create(
+            name="Some Name",
+            address=empire_st_building
+        )
+
+        entity = self.entity_manager.create(
+            name="Some Name 2",
+            address=empire_st_building
+        )
+        self.entity_manager.update_status(entity.get_id(), self.status_deleted.get_id())
+
+        self.entity_manager.create(
+            name="Some Name 3",
+            address=empire_st_building
+        )
+        entity = self.entity_manager.create(
+            name="Other Name",
+            address=statue_of_liberty
+        )
+        self.entity_manager.update_status(entity.get_id(), self.status_deleted.get_id())
+
+        search_result = self.entity_manager.search(
+            name="Some Name",
+            statuses=[self.status_deleted.get_id()]
+        )
+        self.assertEqual(1, len(search_result.get_data()))
+
+    def test_search_returns_search_by_address(self):
+        empire_st_building = "Empire State Building New York City NY"
+        statue_of_liberty = "Statue of Liberty New York City NY"
+
+        self.entity_manager.create(
+            name="Some Name",
+            address=empire_st_building
+        )
+        self.entity_manager.create(
+            name="Some Name 2",
+            address=empire_st_building
+        )
+        self.entity_manager.create(
+            name="Some Name 3",
+            address=empire_st_building
+        )
+        self.entity_manager.create(
+            name="Other Name",
+            address=statue_of_liberty
+        )
+        search_result = self.entity_manager.search(
+            address="Statue of Liberty"
+        )
+        self.assertEqual(1, len(search_result.get_data()))
+
+    def test_search_returns_search_by_tag(self):
         empire_st_building = "Empire State Building New York City NY"
         statue_of_liberty = "Statue of Liberty New York City NY"
 
@@ -117,44 +196,177 @@ class EntityManagerTest(IntegrationSetup):
         self.tag_manager.add(entity.get_id(), self.tag_restaurant.get_id())
         self.tag_manager.add(entity.get_id(), self.tag_bar.get_id())
 
-        entity = self.entity_manager.create(
+        self.entity_manager.create(
             name="Some Name 3",
             address=empire_st_building
         )
-        self.entity_manager.update_status(entity.get_id(), self.status_deleted.get_id())
 
         self.entity_manager.create(
             name="Other Name",
             address=statue_of_liberty
         )
 
-        entities = self.entity_manager.search(
-            name="Some Name"
-        )
-        self.assertEqual(3, len(entities))
-
-        entities = self.entity_manager.search(
-            name="Some Name",
-            statuses=[self.status_active.get_id()]
-        )
-        self.assertEqual(2, len(entities))
-
-        entities = self.entity_manager.search(
-            address="Statue of Liberty"
-        )
-        self.assertEqual(1, len(entities))
-
-        entities = self.entity_manager.search(
+        search_result = self.entity_manager.search(
             tags=[self.tag_restaurant.get_id()]
         )
-        self.assertEqual(2, len(entities))
+        self.assertEqual(2, len(search_result.get_data()))
 
-    def test_search_nearby_returns_nearby_entities(self):
+    def test_search_returns_correct_offset_result(self):
+        empire_st_building = "Empire State Building New York City NY"
+        statue_of_liberty = "Statue of Liberty New York City NY"
+        self.entity_manager.create(
+            name="Some Name",
+            address=empire_st_building
+        )
+        self.entity_manager.create(
+            name="Some Name 2",
+            address=empire_st_building
+        )
+        self.entity_manager.create(
+            name="Some Name 3",
+            address=empire_st_building
+        )
+        self.entity_manager.create(
+            name="Other Name",
+            address=statue_of_liberty
+        )
+
+        search_result = self.entity_manager.search(offset=2, limit=2)
+        self.assertEqual(2, len(search_result.get_data()))
+        self.assertEqual(4, search_result.get_full_count())
+
+    def test_search_nearby_returns_search(self):
         address_1 = "Empire State Building New York City NY"
         address_2 = "Statue of Liberty NYC, New York"
         address_3 = "Golden Gate Bridge San Francisco, California"
         near_ny: Location = self.geo_locator_manager.get_by_address("205 E Houston St, New York City, NY 10002").get_data()[0]
-        near_san_fran: Location = self.geo_locator_manager.get_by_address("1701 Jones St, San Francisco, CA 94109").get_data()[0]
+
+        self.entity_manager.create(
+            name="Some Name",
+            address=address_1
+        )
+        self.entity_manager.create(
+            name="Some Name 2",
+            address=address_2
+        )
+        self.entity_manager.create(
+            name="Other Name",
+            address=address_2
+        )
+        self.entity_manager.create(
+            name="Some Name 3",
+            address=address_2
+        )
+        self.entity_manager.create(
+            name="Some Name 4",
+            address=address_3
+        )
+        search_result = self.entity_manager.search_nearby(
+            near_ny.get_latitude(),
+            near_ny.get_longitude(),
+            100
+        )
+        self.assertEqual(4, len(search_result.get_data()))
+
+    def test_search_nearby_returns_search_by_name(self):
+        address_1 = "Empire State Building New York City NY"
+        address_2 = "Statue of Liberty NYC, New York"
+        near_ny: Location = self.geo_locator_manager.get_by_address("205 E Houston St, New York City, NY 10002").get_data()[0]
+
+        self.entity_manager.create(
+            name="Some Name",
+            address=address_1
+        )
+        self.entity_manager.create(
+            name="Some Name 2",
+            address=address_2
+        )
+        self.entity_manager.create(
+            name="Other Name",
+            address=address_2
+        )
+        self.entity_manager.create(
+            name="Some Name 3",
+            address=address_2
+        )
+        search_result = self.entity_manager.search_nearby(
+            near_ny.get_latitude(),
+            near_ny.get_longitude(),
+            100,
+            name="Some Name"
+        )
+        self.assertEqual(3, len(search_result.get_data()))
+
+    def test_search_nearby_returns_search_by_statuses(self):
+        address_1 = "Empire State Building New York City NY"
+        address_2 = "Statue of Liberty NYC, New York"
+        near_ny: Location = self.geo_locator_manager.get_by_address("205 E Houston St, New York City, NY 10002").get_data()[0]
+
+        entity = self.entity_manager.create(
+            name="Some Name",
+            address=address_1
+        )
+        self.entity_manager.update_status(entity.get_id(), self.status_deleted.get_id())
+
+        self.entity_manager.create(
+            name="Some Name 2",
+            address=address_2
+        )
+
+        entity = self.entity_manager.create(
+            name="Other Name",
+            address=address_2
+        )
+        self.entity_manager.update_status(entity.get_id(), self.status_deleted.get_id())
+
+        self.entity_manager.create(
+            name="Some Name 3",
+            address=address_2
+        )
+
+        search_result = self.entity_manager.search_nearby(
+            near_ny.get_latitude(),
+            near_ny.get_longitude(),
+            100,
+            name="Some Name",
+            statuses=[self.status_deleted.get_id()]
+        )
+        self.assertEqual(1, len(search_result.get_data()))
+
+    def test_search_nearby_returns_search_by_address(self):
+        address_1 = "Empire State Building New York City NY"
+        address_2 = "Statue of Liberty NYC, New York"
+        near_ny: Location = self.geo_locator_manager.get_by_address("205 E Houston St, New York City, NY 10002").get_data()[0]
+
+        self.entity_manager.create(
+            name="Some Name",
+            address=address_1
+        )
+        self.entity_manager.create(
+            name="Some Name 2",
+            address=address_2
+        )
+        self.entity_manager.create(
+            name="Other Name",
+            address=address_2
+        )
+        self.entity_manager.create(
+            name="Some Name 3",
+            address=address_2
+        )
+
+        search_result = self.entity_manager.search_nearby(
+            near_ny.get_latitude(),
+            near_ny.get_longitude(),
+            100,
+            address="Statue of Liberty"
+        )
+        self.assertEqual(3, len(search_result.get_data()))
+
+    def test_search_nearby_returns_search_by_tag(self):
+        address_1 = "Empire State Building New York City NY"
+        address_2 = "Statue of Liberty NYC, New York"
+        near_ny: Location = self.geo_locator_manager.get_by_address("205 E Houston St, New York City, NY 10002").get_data()[0]
 
         entity = self.entity_manager.create(
             name="Some Name",
@@ -173,63 +385,51 @@ class EntityManagerTest(IntegrationSetup):
             name="Other Name",
             address=address_2
         )
-        entity = self.entity_manager.create(
+        self.entity_manager.create(
             name="Some Name 3",
             address=address_2
         )
-        self.entity_manager.update_status(entity.get_id(), self.status_deleted.get_id())
-        self.entity_manager.create(
-            name="Some Name 4",
-            address=address_3
-        )
 
-        entities = self.entity_manager.search_nearby(
-            near_ny.get_latitude(),
-            near_ny.get_longitude(),
-            100
-        )
-        self.assertEqual(4, len(entities))
-
-        entities = self.entity_manager.search_nearby(
-            near_san_fran.get_latitude(),
-            near_san_fran.get_longitude(),
-            100
-        )
-        self.assertEqual(1, len(entities))
-
-        entities = self.entity_manager.search_nearby(
-            near_ny.get_latitude(),
-            near_ny.get_longitude(),
-            100,
-            name="Some Name"
-        )
-        self.assertEqual(3, len(entities))
-
-        entities = self.entity_manager.search_nearby(
-            near_ny.get_latitude(),
-            near_ny.get_longitude(),
-            100,
-            statuses=[self.status_deleted.get_id()]
-        )
-        self.assertEqual(1, len(entities))
-
-        entities = self.entity_manager.search_nearby(
-            near_ny.get_latitude(),
-            near_ny.get_longitude(),
-            100,
-            address="Statue of Liberty",
-            statuses=[self.status_active.get_id()]
-        )
-        self.assertEqual(2, len(entities))
-
-        entities = self.entity_manager.search_nearby(
+        search_result = self.entity_manager.search_nearby(
             near_ny.get_latitude(),
             near_ny.get_longitude(),
             100,
             name="Some Name",
             tags=[self.tag_restaurant.get_id()]
         )
-        self.assertEqual(2, len(entities))
+        self.assertEqual(2, len(search_result.get_data()))
+
+    def test_search_nearby_returns_correct_offset_result(self):
+        address_1 = "Empire State Building New York City NY"
+        address_2 = "Statue of Liberty NYC, New York"
+        near_ny: Location = self.geo_locator_manager.get_by_address("205 E Houston St, New York City, NY 10002").get_data()[0]
+
+        self.entity_manager.create(
+            name="Some Name",
+            address=address_1
+        )
+        self.entity_manager.create(
+            name="Some Name 2",
+            address=address_2
+        )
+        self.entity_manager.create(
+            name="Other Name",
+            address=address_2
+        )
+        self.entity_manager.create(
+            name="Some Name 3",
+            address=address_2
+        )
+
+        search_result = self.entity_manager.search_nearby(
+            near_ny.get_latitude(),
+            near_ny.get_longitude(),
+            100,
+            limit=2,
+            offset=2
+        )
+        self.assertEqual(2, len(search_result.get_data()))
+        self.assertEqual(4, search_result.get_full_count())
 
     def tearDown(self) -> None:
         postgres_conn_manager: PostgresConnManager = PostgresConnManager()
