@@ -3,12 +3,14 @@ from modules.api.handlers.contact_error_code_handler import ContactErrorCodePars
 from modules.api.objects.response import Response
 from modules.api.objects.transformers.contact_transformer import ContactTransformer
 from modules.contact.managers.contact_manager import ContactManager
+from routes.api.middleware.api_credentials import api_credentials
 
 contact_api = Blueprint("contact_api", __name__)
-ROOT = "/api/contact"
+ROOT = "/contact"
 
 
 @contact_api.route(f"{ROOT}/<entity_id>", methods=["GET"])
+@api_credentials()
 def get(entity_id):
     """ GET contacts by entity id API route
     Args:
