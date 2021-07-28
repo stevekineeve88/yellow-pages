@@ -11,6 +11,7 @@ class EntityTransformer(Transformer):
             entity (Entity):
         """
         super().__init__({
+            "id": entity.get_id(),
             "uuid": entity.get_uuid(),
             "name": entity.get_name(),
             "status": entity.get_status().get_dict(),
