@@ -9,6 +9,9 @@ class Environment:
     POSTGRES_HOST = "POSTGRES_HOST"
     POSTGRES_DB_NAME = "POSTGRES_DB_NAME"
 
+    API_ACCESS_ID = "API_ACCESS_ID"
+    API_SECRET = "API_SECRET"
+
     @classmethod
     def set(cls, key: str, value):
         """ Set environment variable

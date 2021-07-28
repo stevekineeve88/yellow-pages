@@ -2,6 +2,7 @@ class ErrorCodeHandler:
     """ Abstract class for handling error codes
     """
     INTERNAL_SERVER_ERROR = 500
+    FORBIDDEN = 403
     NOT_FOUND = 404
 
     def __init__(self, lookup: dict):

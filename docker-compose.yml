@@ -1,6 +1,6 @@
 version: "3.3"
 services:
-  web:
+  api:
     build:
       context: .
       dockerfile: docker-resources/Dockerfile_Local
@@ -9,10 +9,23 @@ services:
     links:
       - "db:db"
     env_file:
-      - docker-resources/env/app.env
+      - docker-resources/env/api.env
     volumes:
       - "./:/code"
     command: ["python", "-m", "flask", "run"]
+  app:
+    build:
+      context: .
+      dockerfile: docker-resources/Dockerfile_Local
+    ports:
+      - "5001:5000"
+    links:
+      - "db:db"
+    env_file:
+      - docker-resources/env/app.env
+    volumes:
+      - "./:/code"
+    command: [ "python", "-m", "flask", "run" ]
   db:
     image: postgres
     env_file:

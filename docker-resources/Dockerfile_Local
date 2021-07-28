@@ -5,7 +5,6 @@ RUN apk update && apk add python3-dev \
     libffi-dev \
     openssl-dev
 WORKDIR /code
-ENV FLASK_APP=index.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV FLASK_ENVIRONMENT=development
 ENV FLASK_DEBUG=1

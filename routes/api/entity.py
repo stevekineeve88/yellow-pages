@@ -1,17 +1,18 @@
 from flask import Blueprint, request
-
 from modules.api.handlers.entity_error_code_handler import EntityErrorCodeParser
 from modules.api.objects.response import Response
 from modules.api.objects.transformers.entity_status_transformer import EntityStatusTransformer
 from modules.api.objects.transformers.entity_transformer import EntityTransformer
 from modules.entity.managers.entity_manager import EntityManager
 from modules.entity.managers.entity_status_manager import EntityStatusManager
+from routes.api.middleware.api_credentials import api_credentials
 
 entity_api = Blueprint("entity_api", __name__)
-ROOT = "/api/entity"
+ROOT = "/entity"
 
 
 @entity_api.route(f"{ROOT}/<uuid>", methods=["GET"])
+@api_credentials()
 def get(uuid: str):
     """ GET entity API route
     Args:
@@ -34,6 +35,7 @@ def get(uuid: str):
 
 
 @entity_api.route(f"{ROOT}/search", methods=["GET"])
+@api_credentials()
 def search():
     """ GET entities by search API route
     Returns:
@@ -71,6 +73,7 @@ def search():
 
 
 @entity_api.route(f"{ROOT}/search/<latitude>/<longitude>/<miles>", methods=["GET"])
+@api_credentials()
 def search_nearby(latitude: float, longitude: float, miles: int):
     """ GET nearby entities API route
     Args:
@@ -115,6 +118,7 @@ def search_nearby(latitude: float, longitude: float, miles: int):
 
 
 @entity_api.route(f"{ROOT}/statuses")
+@api_credentials()
 def get_statuses():
     """ GET statuses API route
     Returns:
