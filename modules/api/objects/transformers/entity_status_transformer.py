@@ -10,8 +10,4 @@ class EntityStatusTransformer(Transformer):
         Args:
             status (EntityStatus):
         """
-        super().__init__({
-            "id": status.get_id(),
-            "const": status.get_const(),
-            "description": status.get_description(),
-        })
+        super().__init__(status.get_dict())
