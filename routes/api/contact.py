@@ -8,7 +8,7 @@ contact_api = Blueprint("contact_api", __name__)
 ROOT = "/api/contact"
 
 
-@contact_api.route(f"{ROOT}/<entity_id>")
+@contact_api.route(f"{ROOT}/<entity_id>", methods=["GET"])
 def get(entity_id):
     """ GET contacts by entity id API route
     Args:
